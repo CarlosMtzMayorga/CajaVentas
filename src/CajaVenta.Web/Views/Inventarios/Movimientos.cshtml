@@ -13,7 +13,10 @@
             <small class="text-muted">Entradas, salidas, ajustes y ventas</small>
         }
     </div>
-    <a class="btn btn-primary" asp-action="Registrar">+ Nueva entrada / salida</a>
+    @if (User.IsInRole("Admin"))
+    {
+        <a class="btn btn-primary" asp-action="Registrar">+ Nueva entrada / salida</a>
+    }
 </div>
 
 @if (Model.Mensaje is not null)

@@ -6,7 +6,10 @@
         <h1 class="h3 mb-0">Clientes</h1>
         <small class="text-muted">Registro con RFC y constancia de situación fiscal para facturar</small>
     </div>
-    <a class="btn btn-primary" asp-action="Crear">+ Nuevo cliente</a>
+    @if (User.IsInRole("Admin"))
+    {
+        <a class="btn btn-primary" asp-action="Crear">+ Nuevo cliente</a>
+    }
 </div>
 
 @if (Model.Mensaje is not null)

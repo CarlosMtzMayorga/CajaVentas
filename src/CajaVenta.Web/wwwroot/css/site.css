@@ -90,6 +90,26 @@ body {
     font-weight: 600;
 }
 
+.nav-section {
+    padding: 0.9rem 1.25rem 0.25rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #9aa2b1;
+    font-weight: 700;
+}
+
+.nav-sub {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-sub .nav-link {
+    padding-left: 2.6rem;
+    font-size: 0.93rem;
+}
+
 .sidebar-footer {
     margin-top: auto;
     padding: 1rem 1.25rem;

@@ -1,0 +1,95 @@
+@model PermisologiaModel
+@using CajaVenta.Domain.Common
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Permisos y roles";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Permisos y roles</h1>
+        <small class="text-muted">Define qué puede hacer cada rol dentro del sistema</small>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index">← Volver</a>
+</div>
+
+@if (TempData["Mensaje"] is string msg)
+{
+    <div class="alert alert-success alert-dismissible">@msg <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+
+@if (TempData["Error"] is string err)
+{
+    <div class="alert alert-danger">@err</div>
+}
+
+<div class="row g-4">
+    @foreach (var rol in Model.Roles)
+    {
+        var esAdmin = rol.Rol == "Admin";
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold">
+                        @if (esAdmin)
+                        {
+                            <i class="bi bi-shield-fill-check text-dark"></i>
+                        }
+                        else
+                        {
+                            <i class="bi bi-person-badge text-primary"></i>
+                        }
+                        @rol.Rol
+                    </span>
+                    @if (esAdmin)
+                    {
+                        <span class="badge text-bg-dark">Acceso total</span>
+                    }
+                </div>
+                <div class="card-body">
+                    @if (esAdmin)
+                    {
+                        <p class="text-muted small mb-3">El rol Admin tiene acceso a todas las funcionalidades de forma predeterminada. No se puede modificar.</p>
+                        <div class="d-flex flex-wrap gap-1">
+                            @foreach (var permiso in Permisos.Catalogo)
+                            {
+                                <span class="badge text-bg-dark">@permiso.Nombre</span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <form asp-action="Permisologia" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="rol" value="@rol.Rol" />
+                            <p class="text-muted small mb-3">Marca los permisos que este rol tendrá en el sistema.</p>
+                            @foreach (var modulo in Permisos.Catalogo.GroupBy(p => p.Modulo))
+                            {
+                                <div class="mb-3">
+                                    <div class="fw-semibold small text-secondary mb-1">@modulo.Key</div>
+                                    @foreach (var p in modulo)
+                                    {
+                                        var activo = rol.PermisosActivos.Contains(p.Clave);
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox"
+                                                   name="permisos" value="@p.Clave"
+                                                   id="@(rol.Rol)_@p.Clave"
+                                                   checked="@activo" />
+                                            <label class="form-check-label small" for="@(rol.Rol)_@p.Clave">
+                                                @p.Nombre
+                                                <span class="text-muted">— @p.Descripcion</span>
+                                            </label>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            <button type="submit" class="btn btn-primary mt-2">
+                                <i class="bi bi-check-lg"></i> Guardar permisos de @rol.Rol
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>

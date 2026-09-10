@@ -8,7 +8,10 @@
     </div>
     <div class="d-flex gap-2">
         <a class="btn btn-outline-primary" asp-action="Movimientos">Movimientos</a>
-        <a class="btn btn-primary" asp-action="Registrar">+ Entrada / salida</a>
+        @if (User.IsInRole("Admin"))
+        {
+            <a class="btn btn-primary" asp-action="Registrar">+ Entrada / salida</a>
+        }
     </div>
 </div>
 
@@ -135,7 +138,10 @@
                         </td>
                         <td class="text-end">
                             <a class="btn btn-sm btn-outline-primary" asp-action="Historial" asp-route-productoId="@s.ProductoId">Historial</a>
-                            <a class="btn btn-sm btn-outline-secondary" asp-action="Registrar" asp-route-productoId="@s.ProductoId" asp-route-sucursalId="@Model.SucursalId">Entrada/salida</a>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a class="btn btn-sm btn-outline-secondary" asp-action="Registrar" asp-route-productoId="@s.ProductoId" asp-route-sucursalId="@Model.SucursalId">Entrada/salida</a>
+                            }
                         </td>
                     </tr>
                 }

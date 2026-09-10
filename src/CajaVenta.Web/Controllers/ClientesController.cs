@@ -1,12 +1,15 @@
 using CajaVenta.Application.DTOs;
 using CajaVenta.Application.Interfaces;
+using CajaVenta.Domain.Common;
 using CajaVenta.Web.Models;
+using CajaVenta.Web.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CajaVenta.Web.Controllers;
 
 [Authorize]
+[Permiso(Permisos.VerClientes)]
 public class ClientesController : Controller
 {
     private readonly IClienteService _clienteService;
@@ -35,11 +38,13 @@ public class ClientesController : Controller
         return View(modelo);
     }
 
+    [Permiso(Permisos.GestionarClientes)]
     public IActionResult Crear()
         => View(new ClienteFormModel());
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Permiso(Permisos.GestionarClientes)]
     public async Task<IActionResult> Crear(ClienteFormModel modelo)
     {
         if (!ModelState.IsValid)
@@ -83,6 +88,7 @@ public class ClientesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Permiso(Permisos.GestionarClientes)]
     public async Task<IActionResult> Editar(Guid id)
     {
         var resultado = await _clienteService.ObtenerPorIdAsync(id);
@@ -112,6 +118,7 @@ public class ClientesController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Permiso(Permisos.GestionarClientes)]
     public async Task<IActionResult> Editar(Guid id, ClienteFormModel modelo)
     {
         if (!ModelState.IsValid)
@@ -155,7 +162,7 @@ public class ClientesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    [Authorize(Roles = "Admin")]
+    [Permiso(Permisos.GestionarClientes)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AlternarActivo(Guid id, bool activo)

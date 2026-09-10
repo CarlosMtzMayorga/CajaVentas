@@ -1,13 +1,16 @@
 using CajaVenta.Application.DTOs;
 using CajaVenta.Application.Interfaces;
+using CajaVenta.Domain.Common;
 using CajaVenta.Domain.Enums;
 using CajaVenta.Web.Models;
+using CajaVenta.Web.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CajaVenta.Web.Controllers;
 
 [Authorize]
+[Permiso(Permisos.VerInventarios)]
 public class InventariosController : Controller
 {
     private readonly IInventarioService _inventarioService;
@@ -114,6 +117,7 @@ public class InventariosController : Controller
     }
 
     [HttpGet]
+    [Permiso(Permisos.RegistrarMovimientosInventario)]
     public async Task<IActionResult> Registrar(Guid? productoId, Guid? sucursalId)
     {
         var sucursal = await ResolverSucursalAsync(sucursalId ?? SucursalContext.ObtenerSucursalClaim(User));
@@ -143,6 +147,7 @@ public class InventariosController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Permiso(Permisos.RegistrarMovimientosInventario)]
     public async Task<IActionResult> Registrar(MovimientoModel modelo)
     {
         if (modelo.SucursalId == Guid.Empty)

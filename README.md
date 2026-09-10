@@ -173,8 +173,8 @@ Para partir de cero:
 
 | Elemento | GUID |
 |---|---|
-| Sucursal Principal | `4556a2b0-0e51-4e6b-9f3e-000000000001` |
-| Caja 1 | `4556a2b0-0e51-4e6b-9f3e-000000000002` |
+| Sucursal Principal | `4556A2B0-0E51-4E6B-9F3E-000000000001` |
+| Caja 1 | `4556A2B0-0E51-4E6B-9F3E-000000000002` |
 
 ---
 

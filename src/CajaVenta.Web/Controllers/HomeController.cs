@@ -10,6 +10,12 @@ public class HomeController : Controller
     public IActionResult Index()
         => RedirectToAction("Index", "Pos");
 
+    public IActionResult AccessDenied(string? recurso = null)
+    {
+        ViewData["Recurso"] = recurso;
+        return View();
+    }
+
     [AllowAnonymous]
     public IActionResult Error()
     {

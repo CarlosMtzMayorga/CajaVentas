@@ -1,4 +1,5 @@
 using System.Data;
+using CajaVenta.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
@@ -6,8 +7,8 @@ namespace CajaVenta.Infrastructure.Persistence;
 
 public static class EsquemaMigracion
 {
-    private const string SUCURSAL_PRINCIPAL_ID = "4556a2b0-0e51-4e6b-9f3e-000000000001";
-    private const string CAJA_PRINCIPAL_ID = "4556a2b0-0e51-4e6b-9f3e-000000000002";
+    private const string SUCURSAL_PRINCIPAL_ID = "4556A2B0-0E51-4E6B-9F3E-000000000001";
+    private const string CAJA_PRINCIPAL_ID = "4556A2B0-0E51-4E6B-9F3E-000000000002";
 
     public static void Aplicar(CajaVentaDbContext context)
     {
@@ -23,6 +24,8 @@ public static class EsquemaMigracion
 
         CrearTablasSucursales(context);
         BackfillSucursales(context);
+        CrearRolesPermisos(context);
+        NormalizarGuids(context);
     }
 
     private static void AplicarColumnasVentas(CajaVentaDbContext context)
@@ -226,6 +229,85 @@ public static class EsquemaMigracion
             using var cmd = connection.CreateCommand();
             cmd.CommandText = sql;
             cmd.ExecuteNonQuery();
+        }
+        finally
+        {
+            if (estabaCerrada)
+                connection.Close();
+        }
+    }
+
+    private static bool TieneTabla(CajaVentaDbContext context, string tabla)
+    {
+        var result = EjecutarEscalarConConexion(context, $"SELECT count(*) FROM sqlite_master WHERE type='table' AND name='{tabla}'");
+        return Convert.ToInt32(result) > 0;
+    }
+
+    private static void CrearRolesPermisos(CajaVentaDbContext context)
+    {
+        EjecutarConConexion(context, @"CREATE TABLE IF NOT EXISTS ""RolesPermisos"" (
+            ""Rol"" TEXT NOT NULL,
+            ""PermisoKey"" TEXT NOT NULL,
+            PRIMARY KEY(""Rol"", ""PermisoKey"")
+        );");
+
+        if (Conteo(context, "RolesPermisos") > 0)
+            return;
+
+        foreach (var clave in Permisos.Todos)
+            EjecutarConConexion(context, $"INSERT OR IGNORE INTO \"RolesPermisos\" (\"Rol\",\"PermisoKey\") VALUES ('Admin','{clave}');");
+
+        foreach (var clave in Permisos.PredeterminadosCajero)
+            EjecutarConConexion(context, $"INSERT OR IGNORE INTO \"RolesPermisos\" (\"Rol\",\"PermisoKey\") VALUES ('Cajero','{clave}');");
+    }
+
+    private static void NormalizarGuids(CajaVentaDbContext context)
+    {
+        var connection = context.Database.GetDbConnection();
+        var estabaCerrada = connection.State != ConnectionState.Open;
+        if (estabaCerrada)
+            connection.Open();
+
+        try
+        {
+            using (var cmd = connection.CreateCommand())
+            {
+                cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'";
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    var tabla = reader["name"]?.ToString();
+                    if (string.IsNullOrEmpty(tabla))
+                        continue;
+
+                    var columnas = new List<string>();
+                    using (var info = connection.CreateCommand())
+                    {
+                        info.CommandText = $"PRAGMA table_info(\"{tabla}\")";
+                        using var infoReader = info.ExecuteReader();
+                        while (infoReader.Read())
+                        {
+                            var columna = infoReader["name"]?.ToString();
+                            if (string.IsNullOrEmpty(columna))
+                                continue;
+                            columnas.Add(columna);
+                        }
+                    }
+
+                    foreach (var columna in columnas)
+                    {
+                        using var update = connection.CreateCommand();
+                        update.CommandText = $"""
+                            UPDATE "{tabla}"
+                            SET "{columna}" = UPPER("{columna}")
+                            WHERE length("{columna}") = 36
+                              AND "{columna}" NOT GLOB '*[^0-9A-Fa-f-]*'
+                              AND "{columna}" <> UPPER("{columna}");
+                            """;
+                        update.ExecuteNonQuery();
+                    }
+                }
+            }
         }
         finally
         {

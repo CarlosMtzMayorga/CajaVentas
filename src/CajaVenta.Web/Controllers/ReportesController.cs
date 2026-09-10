@@ -1,14 +1,17 @@
 using CajaVenta.Application.Common;
 using CajaVenta.Application.DTOs;
 using CajaVenta.Application.Interfaces;
+using CajaVenta.Domain.Common;
 using CajaVenta.Domain.Enums;
 using CajaVenta.Web.Models;
+using CajaVenta.Web.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CajaVenta.Web.Controllers;
 
 [Authorize]
+[Permiso(Permisos.VerReportes)]
 public class ReportesController : Controller
 {
     private readonly IVentaService _ventaService;

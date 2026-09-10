@@ -1,6 +1,7 @@
 using CajaVenta.Application.DTOs;
 using CajaVenta.Application.Interfaces;
 using CajaVenta.Application.Security;
+using CajaVenta.Domain.Common;
 using CajaVenta.Domain.Entities;
 using CajaVenta.Domain.Enums;
 using CajaVenta.Infrastructure.Persistence;
@@ -46,6 +47,15 @@ public static class SeedData
 
         context.Usuarios.AddRange(admin, cajero);
         context.SaveChanges();
+
+        if (!context.RolesPermisos.Any())
+        {
+            context.RolesPermisos.AddRange(
+                Permisos.Todos.Select(k => new RolPermiso { Rol = "Admin", PermisoKey = k }));
+            context.RolesPermisos.AddRange(
+                Permisos.PredeterminadosCajero.Select(k => new RolPermiso { Rol = "Cajero", PermisoKey = k }));
+            context.SaveChanges();
+        }
 
         var productoService = services.GetRequiredService<IProductoService>();
 

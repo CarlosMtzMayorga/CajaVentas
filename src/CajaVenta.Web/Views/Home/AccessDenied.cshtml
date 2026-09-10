@@ -1,0 +1,15 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Acceso denegado";
+}
+
+<div class="text-center py-5">
+    <i class="bi bi-shield-lock display-1 text-danger"></i>
+    <h1 class="h3 mt-3">No tienes permiso para esta sección</h1>
+    @if (ViewData["Recurso"] is string recurso)
+    {
+        <p class="text-muted">Permiso requerido: <strong>@recurso</strong></p>
+    }
+    <p class="text-muted">Pide al administrador que habilite este permiso para tu usuario.</p>
+    <a class="btn btn-primary mt-2" asp-controller="Home" asp-action="Index">Volver al punto de venta</a>
+</div>

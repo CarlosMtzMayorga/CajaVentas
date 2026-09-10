@@ -2,8 +2,10 @@ using System.Globalization;
 using System.Security.Claims;
 using CajaVenta.Application.DTOs;
 using CajaVenta.Application.Interfaces;
+using CajaVenta.Domain.Common;
 using CajaVenta.Domain.Enums;
 using CajaVenta.Web.Models;
+using CajaVenta.Web.Security;
 using CajaVenta.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CajaVenta.Web.Controllers;
 
 [Authorize]
+[Permiso(Permisos.PuntoVenta)]
 public class PosController : Controller
 {
     private readonly IVentaService _ventaService;

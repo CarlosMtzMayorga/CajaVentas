@@ -1,13 +1,16 @@
 using System.Security.Claims;
 using CajaVenta.Application.DTOs;
 using CajaVenta.Application.Interfaces;
+using CajaVenta.Domain.Common;
 using CajaVenta.Web.Models;
+using CajaVenta.Web.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CajaVenta.Web.Controllers;
 
 [Authorize]
+[Permiso(Permisos.Turnos)]
 public class TurnosController : Controller
 {
     private readonly ITurnoService _turnoService;

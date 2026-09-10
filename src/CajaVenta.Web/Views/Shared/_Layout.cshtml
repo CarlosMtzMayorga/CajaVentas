@@ -61,10 +61,27 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Usuarios" ? "active" : "")"
-                           asp-controller="Usuarios" asp-action="Index">
-                            <i class="bi bi-person-badge"></i> Usuarios
-                        </a>
+                        <div class="nav-section">Configuración</div>
+                        <ul class="nav-sub">
+                            <li>
+                                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Configuracion" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")"
+                                   asp-controller="Configuracion" asp-action="Index">
+                                    <i class="bi bi-sliders"></i> Configuración general
+                                </a>
+                            </li>
+                            <li>
+                                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Usuarios" ? "active" : "")"
+                                   asp-controller="Usuarios" asp-action="Index">
+                                    <i class="bi bi-person-badge"></i> Usuarios
+                                </a>
+                            </li>
+                            <li>
+                                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Configuracion" && ViewContext.RouteData.Values["action"]?.ToString() == "Permisologia" ? "active" : "")"
+                                   asp-controller="Configuracion" asp-action="Permisologia">
+                                    <i class="bi bi-shield-lock"></i> Permisos y roles
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                 }
                 <li class="nav-item">

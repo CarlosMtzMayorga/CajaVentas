@@ -1,12 +1,15 @@
 using CajaVenta.Application.DTOs;
 using CajaVenta.Application.Interfaces;
+using CajaVenta.Domain.Common;
 using CajaVenta.Web.Models;
+using CajaVenta.Web.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CajaVenta.Web.Controllers;
 
-[Authorize(Roles = "Admin")]
+[Authorize]
+[Permiso(Permisos.GestionarUsuarios)]
 public class UsuariosController : Controller
 {
     private readonly IUsuarioService _usuarioService;

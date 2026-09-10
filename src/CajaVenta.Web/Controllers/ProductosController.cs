@@ -1,13 +1,16 @@
 using CajaVenta.Application.DTOs;
 using CajaVenta.Application.Interfaces;
+using CajaVenta.Domain.Common;
 using CajaVenta.Domain.Enums;
 using CajaVenta.Web.Models;
+using CajaVenta.Web.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CajaVenta.Web.Controllers;
 
 [Authorize]
+[Permiso(Permisos.VerProductos)]
 public class ProductosController : Controller
 {
     private readonly IProductoService _productoService;
@@ -32,11 +35,11 @@ public class ProductosController : Controller
         return View(modelo);
     }
 
-    [Authorize(Roles = "Admin")]
+    [Permiso(Permisos.GestionarProductos)]
     public IActionResult Crear()
         => View(new CrearProductoDto());
 
-    [Authorize(Roles = "Admin")]
+    [Permiso(Permisos.GestionarProductos)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Crear(CrearProductoDto modelo)
@@ -58,7 +61,7 @@ public class ProductosController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    [Authorize(Roles = "Admin")]
+    [Permiso(Permisos.GestionarProductos)]
     public async Task<IActionResult> Editar(Guid id)
     {
         var resultado = await _productoService.ObtenerPorIdAsync(id);
@@ -82,7 +85,7 @@ public class ProductosController : Controller
         });
     }
 
-    [Authorize(Roles = "Admin")]
+    [Permiso(Permisos.GestionarProductos)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Editar(Guid id, EditarProductoModel modelo)
@@ -108,7 +111,7 @@ public class ProductosController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    [Authorize(Roles = "Admin")]
+    [Permiso(Permisos.GestionarProductos)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Eliminar(Guid id)

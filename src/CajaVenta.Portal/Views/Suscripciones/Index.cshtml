@@ -1,0 +1,86 @@
+@model List<CajaVenta.Portal.Entities.Suscripcion>
+@using CajaVenta.Portal.Enums
+@{
+    ViewData["Title"] = "Suscripciones";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="page-title h3 mb-0">Suscripciones</h1>
+    <a asp-action="Crear" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Nueva suscripción</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Plan</th>
+                    <th>Precio</th>
+                    <th>Inicio</th>
+                    <th>Vence</th>
+                    <th>Estado</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in Model)
+                {
+                    var vencida = s.Estado == EstadoSuscripcion.Activa && s.FechaVencimiento < DateTime.UtcNow;
+                    <tr>
+                        <td class="fw-semibold">@s.Suscriptor.NombreComercial</td>
+                        <td>@s.Plan.Nombre</td>
+                        <td>$@s.PrecioMensual.ToString("N2")/mes</td>
+                        <td>@s.FechaInicio.ToString("dd/MM/yyyy")</td>
+                        <td class="@(vencida ? "text-danger fw-semibold" : "")">
+                            @s.FechaVencimiento.ToString("dd/MM/yyyy") @(vencida ? "(vencida)" : "")
+                        </td>
+                        <td>
+                            <span class="badge @(s.Estado switch {
+                                EstadoSuscripcion.Activa => vencida ? "text-bg-danger" : "text-bg-success",
+                                EstadoSuscripcion.Pendiente => "text-bg-warning",
+                                EstadoSuscripcion.Vencida => "text-bg-danger",
+                                _ => "text-bg-secondary"
+                            })">@s.Estado</span>
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <div class="d-flex gap-1 justify-content-end">
+                                <form asp-action="Cobrar" asp-route-id="@s.Id" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button class="btn btn-sm btn-success" title="Cobrar"><i class="bi bi-cash-stack"></i></button>
+                                </form>
+                                <a asp-action="Editar" asp-route-id="@s.Id" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil"></i></a>
+                                @if (s.Estado == EstadoSuscripcion.Activa)
+                                {
+                                    <form asp-action="Cancelar" asp-route-id="@s.Id" method="post"
+                                          onsubmit="return confirm('¿Cancelar esta suscripción?');">
+                                        @Html.AntiForgeryToken()
+                                        <button class="btn btn-sm btn-outline-danger" title="Cancelar"><i class="bi bi-x-circle"></i></button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form asp-action="Activar" asp-route-id="@s.Id" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button class="btn btn-sm btn-outline-success" title="Activar"><i class="bi bi-check-circle"></i></button>
+                                    </form>
+                                }
+                                @if (!vencida && s.Estado == EstadoSuscripcion.Activa)
+                                {
+                                    <form asp-action="MarcarVencida" asp-route-id="@s.Id" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button class="btn btn-sm btn-outline-danger" title="Marcar vencida"><i class="bi bi-hourglass-split"></i></button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="7" class="text-muted text-center py-4">No hay suscripciones registradas.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

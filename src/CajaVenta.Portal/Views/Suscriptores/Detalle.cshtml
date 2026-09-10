@@ -1,0 +1,158 @@
+@model CajaVenta.Portal.Models.SuscriptorViewModel
+@using CajaVenta.Portal.Enums
+@{
+    ViewData["Title"] = Model.NombreComercial;
+    var hayActiva = Model.Suscripciones.Any(s => s.Estado == EstadoSuscripcion.Activa && s.FechaVencimiento >= DateTime.UtcNow);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title h3 mb-0">@Model.NombreComercial</h1>
+        <span class="badge @(Model.Estado.Valor switch {
+            "Activo" => "text-bg-success",
+            "Prueba" => "text-bg-info",
+            "Suspendido" => "text-bg-warning",
+            _ => "text-bg-secondary"
+        })">@Model.Estado.Valor</span>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Editar" asp-route-id="@Model.Id" class="btn btn-outline-primary"><i class="bi bi-pencil"></i> Editar</a>
+        <form asp-action="Eliminar" asp-route-id="@Model.Id" method="post"
+              onsubmit="return confirm('¿Eliminar este cliente? Se borrará también su base de datos.');">
+            @Html.AntiForgeryToken()
+            <button class="btn btn-outline-danger"><i class="bi bi-trash"></i> Eliminar</button>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header fw-semibold"><i class="bi bi-info-circle"></i> Datos del cliente</div>
+            <div class="card-body">
+                <dl class="row mb-0 small">
+                    <dt class="col-5">Razón social</dt>
+                    <dd class="col-7">@Model.RazonSocial</dd>
+                    <dt class="col-5">RFC</dt>
+                    <dd class="col-7">@Model.Rfc</dd>
+                    <dt class="col-5">Email</dt>
+                    <dd class="col-7">@Model.Email</dd>
+                    <dt class="col-5">Teléfono</dt>
+                    <dd class="col-7">@Model.Telefono</dd>
+                    <dt class="col-5">URL de acceso</dt>
+                    <dd class="col-7"><code>@Model.UrlAcceso</code></dd>
+                </dl>
+
+                <hr />
+                <form asp-action="CambiarEstado" asp-route-id="@Model.Id" method="post" class="d-flex gap-2">
+                    @Html.AntiForgeryToken()
+                    <select name="nuevoEstado" class="form-select form-select-sm">
+                        @foreach (var opcion in Enum.GetValues<EstadoSuscriptor>())
+                        {
+                            <option value="@opcion" selected="@(opcion.ToString() == Model.Estado.Valor)">@opcion</option>
+                        }
+                    </select>
+                    <button class="btn btn-sm btn-outline-secondary">Guardar</button>
+                </form>
+
+                <div class="mt-3 alert @(hayActiva ? "alert-success" : "alert-warning") py-2 small mb-0">
+                    <i class="bi @(hayActiva ? "bi-check-circle" : "bi-exclamation-circle")"></i>
+                    @(hayActiva ? "Licencia activa." : "Sin suscripción activa.")
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header fw-semibold"><i class="bi bi-database"></i> Base de datos del cliente</div>
+            <div class="card-body small">
+                <div class="text-muted mb-1">Ruta provisionada:</div>
+                <code class="text-break">@(!string.IsNullOrEmpty(Model.RazonSocial) ? "" : "")@ViewData["RutaDb"]</code>
+                <div class="text-muted mt-2">Cada cliente usa su propia base SQLite aislada.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="fw-semibold"><i class="bi bi-credit-card"></i> Suscripciones</span>
+                <a asp-controller="Suscripciones" asp-action="Crear" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-lg"></i> Asignar plan
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr><th>Plan</th><th>Precio</th><th>Inicio</th><th>Vence</th><th>Estado</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in Model.Suscripciones)
+                        {
+                            <tr>
+                                <td>@s.Plan.Nombre</td>
+                                <td>$@s.PrecioMensual.ToString("N2")</td>
+                                <td>@s.FechaInicio.ToString("dd/MM/yyyy")</td>
+                                <td>@s.FechaVencimiento.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <span class="badge @(s.Estado switch {
+                                        EstadoSuscripcion.Activa => "text-bg-success",
+                                        EstadoSuscripcion.Pendiente => "text-bg-warning",
+                                        EstadoSuscripcion.Vencida => "text-bg-danger",
+                                        _ => "text-bg-secondary"
+                                    })">@s.Estado</span>
+                                </td>
+                                <td class="text-end">
+                                    <form asp-controller="Suscripciones" asp-action="Cobrar" asp-route-id="@s.Id" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button class="btn btn-sm btn-success" title="Cobrar mensualidad">
+                                            <i class="bi bi-cash-stack"></i> Cobrar
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                        @if (Model.Suscripciones.Count == 0)
+                        {
+                            <tr><td colspan="6" class="text-muted text-center py-3">Sin suscripciones.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="fw-semibold"><i class="bi bi-cash-coin"></i> Pagos</span>
+                <a asp-controller="Pagos" asp-action="Registrar"
+                   asp-route-suscriptorId="@Model.Id" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-plus-lg"></i> Registrar pago
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr><th>Fecha</th><th>Monto</th><th>Método</th><th>Estado</th><th>Notas</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in Model.Pagos)
+                        {
+                            <tr>
+                                <td>@p.Fecha.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>$@p.Monto.ToString("N2")</td>
+                                <td>@p.Metodo</td>
+                                <td>
+                                    <span class="badge @(p.Estado == EstadoPago.Pagado ? "text-bg-success" : "text-bg-secondary")">@p.Estado</span>
+                                </td>
+                                <td class="text-muted">@p.Notas</td>
+                            </tr>
+                        }
+                        @if (Model.Pagos.Count == 0)
+                        {
+                            <tr><td colspan="5" class="text-muted text-center py-3">Sin pagos registrados.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

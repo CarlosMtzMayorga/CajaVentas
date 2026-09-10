@@ -61,6 +61,56 @@ La `Infrastructure` referencia la `Application`, y la `Web` referencia a ambas. 
 | Base de datos | SQLite |
 | Frontend | Razor Views + Bootstrap 5 (CDN) + Bootstrap Icons |
 | Autenticación | Cookies + Claims con roles (`Admin`, `Cajero`) |
+| Pasarelas de pago | Abstracción `IPasarelaPago`: Stripe, MercadoPago y modo Demo |
+
+---
+
+## SaaS Plataforma (Portal CajaVenta)
+
+El sistema se renta como **SaaS por suscripción mensual** a través del **Portal CajaVenta**, una aplicación ASP.NET Core separada (`src/CajaVenta.Portal/`, puerto `5001` por defecto) enfocada en administrar clientes arrendatarios.
+
+### Modelo de negocio
+
+- **Un cliente = una base de datos aislada.** Al crear un cliente, el portal **provisiona una base SQLite nueva** (`src/CajaVenta.Portal/data/clientes/{id}.db`) con todo el esquema y el seed (usuarios, sucursal, caja, productos).
+- **Planes fijos mensuales** (`Básico`, `Pro`, `Empresarial`) con precio configurable.
+- **Suscripciones** por cliente: fecha de inicio, vencimiento y estado (Activa / Pendiente / Vencida / Cancelada). Al registrar/confirmar un pago, la suscripción se activa y se extiende 1 mes.
+- **Pagos** vía pasarela configurable. La integración se hace por una abstracción `IPasarelaPago`:
+
+### Pasarelas de pago
+
+| Proveedor | Config `Pasarela:` | Uso |
+|---|---|---|
+| Demo | `Proveedor="Demo"` (default) | Página de pago simulada para pruebas locales; un clic registra el cobro |
+| Stripe | `Proveedor="Stripe"`, `Stripe:ClaveSecreta` | Crea una Checkout Session real y recibe webhooks en `POST /api/pagos/webhook/stripe` |
+| MercadoPago | `Proveedor="MercadoPago"`, `MercadoPago:TokenAcceso` | Crea una preferencia de pago real; webhook en `POST /api/pagos/webhook/mercadopago` |
+
+> En producción se configura `Pasarela:Proveedor` y la clave correspondiente en el `appsettings.json` del **portal**. Con `Demo` no se requiere ninguna credencial.
+
+### Módulos del portal
+
+- **Dashboard** (`/`): KPIs de clientes, suscripciones activas/vencidas, ingresos del mes y totales, próximos vencimientos y últimos pagos.
+- **Clientes** (`/Suscriptores`): alta, edición, estados (Activo / Suspendido / Cancelado / Prueba), detalle con suscripciones y pagos. El alta **crea y provisiona la base de datos del cliente**.
+- **Suscripciones** (`/Suscripciones`): asignar plan, editar fechas/estado, cancelar, activar, marcar vencida y **botón "Cobrar"** que lanza el cobro por la pasarela.
+- **Pagos** (`/Pagos`): historial, registrar pago manual y página de pago simulada en modo Demo.
+- **Planes** (`/Planes`): CRUD de planes con precio mensual y activo/inactivo.
+
+### API de licencias
+
+`GET /api/licencia/{urlAcceso}` devuelve el estado de la licencia del cliente (nombre, plan, vencimiento, último pago, si está activa), útil para que cada instancia en producción valide su suscripción.
+
+### Usuarios del portal
+
+| Usuario | Contraseña | Rol |
+|---|---|---|
+| `admin` | `portal123` | Admin (se cambia en producción) |
+
+### Puesta en marcha del portal
+
+```bash
+dotnet run --project src/CajaVenta.Portal --no-launch-profile --urls http://localhost:5001
+```
+
+`http://localhost:5001` → login del portal. La base del portal es `src/CajaVenta.Portal/data/portal.db`; las de los clientes quedan en `src/CajaVenta.Portal/data/clientes/`.
 
 ---
 
@@ -203,7 +253,7 @@ Configuraciones EF en `Infrastructure/Persistence/Configurations`.
 2. Crea tablas si no existen: `Sucursales`, `Cajas`, `StocksInventario` (+ índices).
 3. *Backfill*: crea la sucursal/caja principal, asigna los usuarios no-Admin a la sucursal principal, rellena `SucursalId`/`CajaId` de turnos y movimientos existentes, y genera `StocksInventario` a partir de la columna legada `Productos.StockActual` (si existía).
 
-El seed (`SeedData`) solo corre cuando la base está vacía y crea: sucursal/caja principales, `admin` (global) y `cajero` (Sucursal Principal), productos de ejemplo, y por cada producto un movimiento de entrada + su fila de `StocksInventario`.
+El seed (`SeedData`, en `CajaVenta.Infrastructure/Seed`) solo corre cuando la base está vacía y crea: sucursal/caja principales, `admin` (global) y `cajero` (Sucursal Principal), productos de ejemplo, y por cada producto un movimiento de entrada + su fila de `StocksInventario`. El Portal reutiliza el mismo seed al **provisionar la base de cada cliente SaaS**.
 
 ---
 
@@ -225,19 +275,31 @@ src/
 │                         TurnoService, VentaService, ClienteService
 ├── CajaVenta.Infrastructure/
 │   ├── DependencyInjection.cs
+│   ├── Seed/SeedData.cs
 │   └── Persistence/
 │       ├── CajaVentaDbContext.cs
 │       ├── EsquemaMigracion.cs
 │       ├── Configurations/  (una clase por entidad)
 │       └── Repositories/    (implementaciones de las interfaces de dominio)
-└── CajaVenta.Web/
-    ├── Program.cs           (DI, auth, EnsureCreated, migración, seed)
-    ├── Seed/SeedData.cs
-    ├── SucursalContext.cs   (helper de claims: sucursal actual del usuario)
-    ├── Controllers/         Auth, Home, Pos, Turnos, Productos, Inventarios,
-    │                        Clientes, Reportes, Sucursales, Usuarios
+├── CajaVenta.Web/
+│   ├── Program.cs           (DI, auth, EnsureCreated, migración, seed)
+│   ├── SucursalContext.cs   (helper de claims: sucursal actual del usuario)
+│   ├── Controllers/         Auth, Home, Pos, Turnos, Productos, Inventarios,
+│   │                        Clientes, Reportes, Sucursales, Usuarios
+│   ├── Models/              (modelos de las vistas)
+│   └── Views/               Razor views por controlador
+└── CajaVenta.Portal/
+    ├── Program.cs           (DI, auth, EnsureCreated, seed del portal)
+    ├── Data/                PortalDbContext, EsquemaPortal (sembrado de planes/admin)
+    ├── Entities/            Plan, Suscriptor, Suscripcion, Pago, UsuarioPortal
+    ├── Services/            SuscriptorService, SuscripcionService, PagoService,
+    │   │                    PlanService, LicenciaService, TenantProvisioner
+    │   └── Pasarelas/       IPasarelaPago, StripePasarela, MercadoPagoPasarela, DemoPasarela
+    ├── Controllers/         Auth, Dashboard, Suscriptores, Suscripciones, Pagos,
+    │                        Planes + API (licencia, webhooks)
     ├── Models/              (modelos de las vistas)
-    └── Views/               Razor views por controlador
+    ├── Views/               Razor views por controlador
+    └── data/                portal.db + bases SQLite provisionadas por cliente
 ```
 
 ## Flujo de una venta

@@ -1,0 +1,53 @@
+@model List<CajaVenta.Portal.Entities.Pago>
+@using CajaVenta.Portal.Enums
+@{
+    ViewData["Title"] = "Pagos";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="page-title h3 mb-0">Pagos</h1>
+    <a asp-action="Registrar" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Registrar pago</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Cliente</th>
+                    <th>Suscripción</th>
+                    <th>Monto</th>
+                    <th>Método</th>
+                    <th>Estado</th>
+                    <th>Referencia</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model)
+                {
+                    <tr>
+                        <td>@p.Fecha.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td class="fw-semibold">@p.Suscriptor.NombreComercial</td>
+                        <td><small>@p.Suscripcion.Plan?.Nombre ?? "—"</small></td>
+                        <td>$@p.Monto.ToString("N2")</td>
+                        <td>@p.Metodo</td>
+                        <td>
+                            <span class="badge @(p.Estado switch {
+                                EstadoPago.Pagado => "text-bg-success",
+                                EstadoPago.Pendiente => "text-bg-warning",
+                                EstadoPago.Rechazado => "text-bg-danger",
+                                _ => "text-bg-secondary"
+                            })">@p.Estado</span>
+                        </td>
+                        <td><small class="text-muted">@p.ReferenciaExterna</small></td>
+                    </tr>
+                }
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="7" class="text-muted text-center py-4">No hay pagos registrados.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

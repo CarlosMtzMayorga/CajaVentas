@@ -1,0 +1,67 @@
+@model CajaVenta.Portal.Models.PagoViewModel
+@{
+    ViewData["Title"] = "Registrar pago";
+}
+
+<h1 class="page-title h3 mb-4">Registrar pago</h1>
+
+<form asp-action="Registrar" method="post" class="card shadow-sm">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Cliente</label>
+                <select asp-for="SuscriptorId" class="form-select" id="selectSuscriptor">
+                    <option value="">— Selecciona —</option>
+                    @foreach (var s in Model.Suscriptores)
+                    {
+                        <option value="@s.Id">@s.NombreComercial</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Suscripción</label>
+                <select asp-for="SuscripcionId" class="form-select">
+                    <option value="@Guid.Empty">— Selecciona —</option>
+                    @foreach (var s in Model.Suscripciones)
+                    {
+                        <option value="@s.Id">@(s.Plan?.Nombre ?? "") — vence @s.FechaVencimiento.ToString("dd/MM/yyyy")</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Monto</label>
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input asp-for="Monto" class="form-control" type="number" step="0.01" min="0.01" required />
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Método</label>
+                <select asp-for="Metodo" class="form-select">
+                    @foreach (var m in System.Enum.GetValues<CajaVenta.Portal.Enums.MetodoPagoPasarela>())
+                    {
+                        <option value="@m">@m</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Notas</label>
+                <input asp-for="Notas" class="form-control" />
+            </div>
+        </div>
+    </div>
+    <div class="card-footer d-flex justify-content-end gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+        <button class="btn btn-primary"><i class="bi bi-cash-coin"></i> Registrar y activar periodo</button>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        document.getElementById('selectSuscriptor').addEventListener('change', function () {
+            const url = '@Url.Action("Registrar")?suscriptorId=' + this.value;
+            window.location = url;
+        });
+    </script>
+}

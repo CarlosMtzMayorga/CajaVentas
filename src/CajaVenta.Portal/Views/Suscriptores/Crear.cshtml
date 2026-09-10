@@ -1,0 +1,55 @@
+@model CajaVenta.Portal.Models.SuscriptorViewModel
+@{
+    ViewData["Title"] = "Nuevo cliente";
+}
+
+<h1 class="page-title h3 mb-4">Nuevo cliente</h1>
+
+<form asp-action="Crear" method="post" class="card shadow-sm">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Nombre comercial *</label>
+                <input asp-for="NombreComercial" class="form-control" required />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Razón social</label>
+                <input asp-for="RazonSocial" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">RFC</label>
+                <input asp-for="Rfc" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Email</label>
+                <input asp-for="Email" class="form-control" type="email" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Teléfono</label>
+                <input asp-for="Telefono" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">URL de acceso (identificador) *</label>
+                <div class="input-group">
+                    <span class="input-group-text">https://app.cajaventa.mx/</span>
+                    <input asp-for="UrlAcceso" class="form-control" placeholder="mi-empresa" required />
+                </div>
+                <div class="form-text">Clave única del cliente; se usa para provisionar y consultar su licencia.</div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Estado</label>
+                <select asp-for="Estado.Valor" class="form-select">
+                    @foreach (var opcion in Model.Estado.Opciones)
+                    {
+                        <option value="@opcion">@opcion</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer d-flex justify-content-end gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+        <button class="btn btn-primary"><i class="bi bi-database-add"></i> Crear y provisionar base de datos</button>
+    </div>
+</form>

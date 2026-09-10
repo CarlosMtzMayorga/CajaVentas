@@ -6,8 +6,9 @@ using CajaVenta.Domain.Entities;
 using CajaVenta.Domain.Enums;
 using CajaVenta.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace CajaVenta.Web.Seed;
+namespace CajaVenta.Infrastructure.Seed;
 
 public static class SeedData
 {

@@ -1,0 +1,39 @@
+@model List<CajaVenta.Portal.Models.PlanViewModel>
+@{
+    ViewData["Title"] = "Planes";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="page-title h3 mb-0">Planes</h1>
+    <a asp-action="Crear" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Nuevo plan</a>
+</div>
+
+<div class="row g-3">
+    @foreach (var p in Model)
+    {
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="fw-bold mb-1">@p.Nombre</h5>
+                        <span class="badge @(p.Activo ? "text-bg-success" : "text-bg-secondary")">@(p.Activo ? "Activo" : "Inactivo")</span>
+                    </div>
+                    <p class="text-muted small">@p.Descripcion</p>
+                    <div class="fs-4 fw-bold text-primary">$@p.PrecioMensual.ToString("N2") <small class="text-muted fs-6">/mes</small></div>
+                </div>
+                <div class="card-footer d-flex justify-content-end gap-2 bg-transparent">
+                    <a asp-action="Editar" asp-route-id="@p.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                    <form asp-action="Eliminar" asp-route-id="@p.Id" method="post"
+                          onsubmit="return confirm('¿Eliminar este plan?');">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+    @if (Model.Count == 0)
+    {
+        <div class="col-12"><div class="alert alert-info">No hay planes creados.</div></div>
+    }
+</div>

@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using CajaVenta.Infrastructure;
 using CajaVenta.Infrastructure.Persistence;
-using CajaVenta.Web.Seed;
+using CajaVenta.Infrastructure.Seed;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 

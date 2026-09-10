@@ -1,0 +1,114 @@
+@model CajaVenta.Portal.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="page-title h3 mb-0">Resumen general</h1>
+    <a asp-controller="Suscriptores" asp-action="Crear" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Nuevo cliente
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card text-white bg-primary shadow-sm">
+            <div class="card-body">
+                <div class="text-uppercase small opacity-75">Clientes</div>
+                <div class="fs-3 fw-bold">@Model.TotalSuscriptores</div>
+                <small>@Model.Activos activos · @Model.EnPrueba prueba</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-white bg-success shadow-sm">
+            <div class="card-body">
+                <div class="text-uppercase small opacity-75">Suscripciones activas</div>
+                <div class="fs-3 fw-bold">@Model.SuscripcionesActivas</div>
+                <small>@Model.SuscripcionesVencidas vencidas</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-white bg-warning shadow-sm">
+            <div class="card-body">
+                <div class="text-uppercase small opacity-75">Ingresos del mes</div>
+                <div class="fs-3 fw-bold">$@Model.IngresosMes.ToString("N2")</div>
+                <small>suspendidos: @Model.Suspendidos</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-white bg-dark shadow-sm">
+            <div class="card-body">
+                <div class="text-uppercase small opacity-75">Ingresos totales</div>
+                <div class="fs-3 fw-bold">$@Model.IngresosTotales.ToString("N2")</div>
+                <small>cancelados: @Model.Cancelados</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header fw-semibold"><i class="bi bi-calendar-event"></i> Próximos vencimientos (7 días)</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr><th>Cliente</th><th>Plan</th><th>Vence</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.PorVencer.Count == 0)
+                        {
+                            <tr><td colspan="4" class="text-muted text-center py-3">Nada por vencer próximamente</td></tr>
+                        }
+                        @foreach (var s in Model.PorVencer)
+                        {
+                            <tr>
+                                <td>@s.Suscriptor.NombreComercial</td>
+                                <td>@s.Plan.Nombre</td>
+                                <td>@s.FechaVencimiento.ToString("dd/MM/yyyy")</td>
+                                <td class="text-end">
+                                    <a asp-controller="Suscriptores" asp-action="Detalle" asp-route-id="@s.SuscriptorId"
+                                       class="btn btn-sm btn-outline-primary">Ver</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header fw-semibold"><i class="bi bi-cash-coin"></i> Últimos pagos</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr><th>Cliente</th><th>Monto</th><th>Fecha</th><th>Estado</th></tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.UltimosPagos.Count == 0)
+                        {
+                            <tr><td colspan="4" class="text-muted text-center py-3">Sin pagos registrados</td></tr>
+                        }
+                        @foreach (var p in Model.UltimosPagos)
+                        {
+                            <tr>
+                                <td>@p.Suscriptor.NombreComercial</td>
+                                <td>$@p.Monto.ToString("N2")</td>
+                                <td>@p.Fecha.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    <span class="badge @(p.Estado == CajaVenta.Portal.Enums.EstadoPago.Pagado ? "text-bg-success" : "text-bg-secondary")">
+                                        @p.Estado
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

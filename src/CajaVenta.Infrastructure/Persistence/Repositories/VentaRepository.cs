@@ -53,7 +53,7 @@ public class VentaRepository : IVentaRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<Venta>> ObtenerPorRangoFechasAsync(DateTime inicio, DateTime fin, Guid? sucursalId = null)
+    public async Task<IEnumerable<Venta>> ObtenerPorRangoFechasAsync(DateTime inicio, DateTime fin, Guid? sucursalId = null, Guid? cajaId = null)
     {
         var query = _context.Ventas
             .Include(v => v.Cliente)
@@ -64,6 +64,9 @@ public class VentaRepository : IVentaRepository
 
         if (sucursalId.HasValue)
             query = query.Where(v => v.TurnoCaja.SucursalId == sucursalId.Value);
+
+        if (cajaId.HasValue)
+            query = query.Where(v => v.TurnoCaja.CajaId == cajaId.Value);
 
         return await query
             .OrderByDescending(v => v.FechaCreacion)

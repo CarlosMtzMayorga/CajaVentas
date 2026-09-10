@@ -270,9 +270,9 @@ public class VentaService : IVentaService
         }
     }
 
-    public async Task<Result<List<VentaDto>>> ObtenerPorRangoFechasAsync(DateTime inicio, DateTime fin, Guid? sucursalId = null)
+    public async Task<Result<List<VentaDto>>> ObtenerPorRangoFechasAsync(DateTime inicio, DateTime fin, Guid? sucursalId = null, Guid? cajaId = null)
     {
-        var ventas = await _ventaRepository.ObtenerPorRangoFechasAsync(inicio, fin, sucursalId);
+        var ventas = await _ventaRepository.ObtenerPorRangoFechasAsync(inicio, fin, sucursalId, cajaId);
         return Result<List<VentaDto>>.Success(ventas.Select(MapearAVentaDto).ToList());
     }
 

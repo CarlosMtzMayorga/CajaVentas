@@ -15,11 +15,13 @@ public class TurnosController : Controller
 {
     private readonly ITurnoService _turnoService;
     private readonly ISucursalService _sucursalService;
+    private readonly ICorteZService _corteZService;
 
-    public TurnosController(ITurnoService turnoService, ISucursalService sucursalService)
+    public TurnosController(ITurnoService turnoService, ISucursalService sucursalService, ICorteZService corteZService)
     {
         _turnoService = turnoService;
         _sucursalService = sucursalService;
+        _corteZService = corteZService;
     }
 
     private Guid UsuarioId
@@ -123,11 +125,14 @@ public class TurnosController : Controller
         });
 
         if (resultado.IsFailure)
+        {
             TempData["Error"] = resultado.Error;
-        else
-            TempData["Mensaje"] = "Turno cerrado correctamente";
+            return RedirectToAction(nameof(Index));
+        }
 
-        return RedirectToAction(nameof(Index));
+        await _corteZService.GenerarCorteZAsync(turno.Value!.Id);
+        TempData["Mensaje"] = "Turno cerrado correctamente";
+        return RedirectToAction(nameof(CorteZ), new { turnoId = turno.Value!.Id });
     }
 
     [HttpPost]
@@ -156,5 +161,23 @@ public class TurnosController : Controller
             return RedirectToAction(nameof(Index));
 
         return View(corte);
+    }
+
+    public async Task<IActionResult> CorteZ(Guid turnoId)
+    {
+        var resultado = await _corteZService.ObtenerPorTurnoAsync(turnoId);
+        if (resultado.IsFailure)
+        {
+            var generado = await _corteZService.GenerarCorteZAsync(turnoId);
+            if (generado.IsFailure)
+            {
+                TempData["Error"] = resultado.Error;
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(generado.Value);
+        }
+
+        return View(resultado.Value);
     }
 }

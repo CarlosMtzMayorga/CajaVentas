@@ -25,6 +25,7 @@ public static class EsquemaMigracion
         CrearTablasSucursales(context);
         BackfillSucursales(context);
         CrearRolesPermisos(context);
+        CrearTablaCortesZ(context);
         NormalizarGuids(context);
     }
 
@@ -163,6 +164,49 @@ public static class EsquemaMigracion
                 $"INSERT INTO \"StocksInventario\" (\"ProductoId\", \"SucursalId\", \"StockActual\") " +
                 $"SELECT \"Id\", '{SUCURSAL_PRINCIPAL_ID}', COALESCE(\"StockActual\", 0) FROM \"Productos\"");
         }
+    }
+
+    private static void CrearTablaCortesZ(CajaVentaDbContext context)
+    {
+        if (TieneTabla(context, "CortesZ"))
+            return;
+
+        EjecutarConConexion(context, """
+            CREATE TABLE "CortesZ" (
+                "Id" TEXT NOT NULL PRIMARY KEY,
+                "Numero" INTEGER NOT NULL,
+                "TurnoCajaId" TEXT NOT NULL,
+                "SucursalId" TEXT NOT NULL,
+                "CajaId" TEXT NOT NULL,
+                "UsuarioId" TEXT NOT NULL,
+                "FechaApertura" TEXT NOT NULL,
+                "FechaCierre" TEXT NOT NULL,
+                "FondoInicial" TEXT NOT NULL,
+                "FondoFinal" TEXT NULL,
+                "Subtotal" TEXT NOT NULL,
+                "Impuestos" TEXT NOT NULL,
+                "TotalVentas" TEXT NOT NULL,
+                "CantidadVentas" INTEGER NOT NULL,
+                "CantidadCanceladas" INTEGER NOT NULL,
+                "VentasEfectivo" TEXT NOT NULL,
+                "VentasTarjeta" TEXT NOT NULL,
+                "VentasOtros" TEXT NOT NULL,
+                "FechaCreacion" TEXT NOT NULL,
+                "FechaModificacion" TEXT NULL,
+                "Activo" INTEGER NOT NULL DEFAULT 1,
+                "CreadoPor" TEXT NULL,
+                "ModificadoPor" TEXT NULL
+            )
+            """);
+
+        EjecutarConConexion(context,
+            "CREATE UNIQUE INDEX IF NOT EXISTS \"IX_CortesZ_CajaId_Numero\" ON \"CortesZ\" (\"CajaId\", \"Numero\")");
+        EjecutarConConexion(context,
+            "CREATE INDEX IF NOT EXISTS \"IX_CortesZ_SucursalId\" ON \"CortesZ\" (\"SucursalId\")");
+        EjecutarConConexion(context,
+            "CREATE INDEX IF NOT EXISTS \"IX_CortesZ_CajaId\" ON \"CortesZ\" (\"CajaId\")");
+        EjecutarConConexion(context,
+            "CREATE INDEX IF NOT EXISTS \"IX_CortesZ_TurnoCajaId\" ON \"CortesZ\" (\"TurnoCajaId\")");
     }
 
     private static bool TieneColumna(CajaVentaDbContext context, string tabla, string columna)

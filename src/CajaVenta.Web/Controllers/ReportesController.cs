@@ -17,28 +17,39 @@ public class ReportesController : Controller
     private readonly IVentaService _ventaService;
     private readonly IInventarioService _inventarioService;
     private readonly ISucursalService _sucursalService;
+    private readonly ICorteZService _corteZService;
 
     public ReportesController(
         IVentaService ventaService,
         IInventarioService inventarioService,
-        ISucursalService sucursalService)
+        ISucursalService sucursalService,
+        ICorteZService corteZService)
     {
         _ventaService = ventaService;
         _inventarioService = inventarioService;
         _sucursalService = sucursalService;
+        _corteZService = corteZService;
     }
 
-    public async Task<IActionResult> Index(DateTime? desde, DateTime? hasta, Guid? sucursalId)
+    public async Task<IActionResult> Index(DateTime? desde, DateTime? hasta, Guid? sucursalId, Guid? cajaId)
     {
         var sucursal = await ResolverSucursalAsync(sucursalId);
         var hoy = DateTime.Today;
         var desdeFiltro = desde ?? hoy;
         var hastaFiltro = (hasta ?? hoy).AddDays(1).AddMilliseconds(-1);
 
+        var caja = await ResolverCajaAsync(sucursal?.Id, cajaId);
+
         var ventasResultado = await _ventaService.ObtenerPorRangoFechasAsync(
             desdeFiltro.ToUniversalTime(),
             hastaFiltro.ToUniversalTime(),
-            sucursal?.Id);
+            sucursal?.Id,
+            caja?.Id);
+        var cortesZResultado = await _corteZService.ObtenerPorRangoFechasAsync(
+            desdeFiltro.ToUniversalTime(),
+            hastaFiltro.ToUniversalTime(),
+            sucursal?.Id,
+            caja?.Id);
         var catalogoResultado = sucursal is null
             ? Result<List<StockProductoDto>>.Success(new List<StockProductoDto>())
             : await _inventarioService.ObtenerCatalogoStockAsync(sucursal.Id);
@@ -76,15 +87,20 @@ public class ReportesController : Controller
             .ToList();
 
         var sucursales = await _sucursalService.ObtenerTodosAsync(true);
+        var cajas = await ObtenerCajasAsync(sucursal?.Id);
 
         var modelo = new ReportesModel
         {
             SucursalId = sucursal?.Id ?? Guid.Empty,
             SucursalNombre = sucursal?.Nombre ?? "Todas las sucursales",
             Sucursales = sucursales.IsSuccess ? sucursales.Value! : new List<SucursalDto>(),
+            CajaId = caja?.Id ?? Guid.Empty,
+            CajaNombre = caja?.Nombre ?? "Todas las cajas",
+            Cajas = cajas,
             Desde = desdeFiltro,
             Hasta = hastaFiltro.AddDays(-1),
             Ventas = ventas.OrderByDescending(v => v.FechaCreacion).ToList(),
+            CortesZ = cortesZResultado.IsSuccess ? cortesZResultado.Value! : new List<CorteZDto>(),
             TopProductos = topProductos,
             PorMetodo = porMetodo,
             StockBajo = stockBajo
@@ -102,5 +118,57 @@ public class ReportesController : Controller
             return (await _sucursalService.ObtenerPorIdAsync(claim.Value)).Value;
 
         return null;
+    }
+
+    private async Task<CajaDto?> ResolverCajaAsync(Guid? sucursalId, Guid? cajaId)
+    {
+        if (!cajaId.HasValue)
+            return null;
+
+        if (sucursalId.HasValue)
+        {
+            var resultado = await _sucursalService.ObtenerCajasAsync(sucursalId.Value);
+            return resultado.IsSuccess ? resultado.Value!.FirstOrDefault(c => c.Id == cajaId.Value) : null;
+        }
+
+        var sucursales = await _sucursalService.ObtenerTodosAsync(true);
+        if (sucursales.IsSuccess)
+        {
+            foreach (var s in sucursales.Value!)
+            {
+                var resultado = await _sucursalService.ObtenerCajasAsync(s.Id);
+                if (resultado.IsSuccess)
+                {
+                    var caja = resultado.Value!.FirstOrDefault(c => c.Id == cajaId.Value);
+                    if (caja is not null)
+                        return caja;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private async Task<List<CajaDto>> ObtenerCajasAsync(Guid? sucursalId)
+    {
+        var lista = new List<CajaDto>();
+        if (sucursalId.HasValue)
+        {
+            var resultado = await _sucursalService.ObtenerCajasAsync(sucursalId.Value);
+            return resultado.IsSuccess ? resultado.Value!.Where(c => c.Activo).ToList() : lista;
+        }
+
+        var sucursales = await _sucursalService.ObtenerTodosAsync(true);
+        if (sucursales.IsSuccess)
+        {
+            foreach (var s in sucursales.Value!)
+            {
+                var resultado = await _sucursalService.ObtenerCajasAsync(s.Id);
+                if (resultado.IsSuccess)
+                    lista.AddRange(resultado.Value!.Where(c => c.Activo));
+            }
+        }
+
+        return lista;
     }
 }

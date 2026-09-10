@@ -20,6 +20,16 @@
         </select>
     </div>
     <div class="col-auto">
+        <label class="form-label mb-0 small">Caja</label>
+        <select name="cajaId" class="form-select">
+            <option value="">Todas</option>
+            @foreach (var c in Model.Cajas)
+            {
+                <option value="@c.Id" selected="@(Model.CajaId == c.Id)">@c.Nombre</option>
+            }
+        </select>
+    </div>
+    <div class="col-auto">
         <label class="form-label mb-0 small">Desde</label>
         <input type="date" name="desde" class="form-control" value="@Model.Desde.ToString("yyyy-MM-dd")" />
     </div>
@@ -72,6 +82,47 @@
                 <div class="fs-3 fw-bold text-danger">@Model.TicketsCancelados</div>
             </div>
         </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold">Cortes Z del período</div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>N°</th>
+                    <th>Cierre</th>
+                    <th>Sucursal</th>
+                    <th>Caja</th>
+                    <th class="text-end">Ventas</th>
+                    <th class="text-center">Tickets</th>
+                    <th class="text-center">Cancelados</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.CortesZ.Count == 0)
+                {
+                    <tr><td colspan="8" class="text-center text-muted py-4">Sin cortes Z en el período</td></tr>
+                }
+                @foreach (var c in Model.CortesZ)
+                {
+                    <tr>
+                        <td>@c.Numero</td>
+                        <td>@c.FechaCierre.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@c.SucursalNombre</td>
+                        <td>@c.CajaNombre</td>
+                        <td class="text-end fw-semibold">$@c.TotalVentas.ToString("N2")</td>
+                        <td class="text-center">@c.CantidadVentas</td>
+                        <td class="text-center">@c.CantidadCanceladas</td>
+                        <td>
+                            <a class="btn btn-sm btn-outline-secondary" asp-action="CorteZ" asp-controller="Turnos" asp-route-turnoId="@c.TurnoCajaId">Ver corte</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
 </div>
 

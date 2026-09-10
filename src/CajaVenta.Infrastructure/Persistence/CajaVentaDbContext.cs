@@ -20,6 +20,7 @@ public class CajaVentaDbContext : DbContext
     public DbSet<Caja> Cajas => Set<Caja>();
     public DbSet<StockInventario> StocksInventario => Set<StockInventario>();
     public DbSet<RolPermiso> RolesPermisos => Set<RolPermiso>();
+    public DbSet<CorteZ> CortesZ => Set<CorteZ>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

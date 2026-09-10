@@ -1,0 +1,89 @@
+@model CorteZDto
+@{
+    Layout = "_Layout";
+    var esperado = Model.FondoInicial + Model.VentasEfectivo;
+}
+
+<div class="no-print d-flex justify-content-between align-items-center mb-3">
+    <a class="btn btn-outline-secondary" asp-action="Index" asp-controller="Turnos">← Volver a turnos</a>
+    <button class="btn btn-primary" onclick="window.print()">Imprimir corte Z</button>
+</div>
+
+<div class="ticket-wrap">
+    <div class="ticket p-4">
+        <div class="text-center mb-3">
+            <div class="fw-bold fs-5">CAJAVENTA</div>
+            <small>CORTE DE CAJA (Z) N° @Model.Numero</small><br />
+            <small>@Model.CajaNombre — @Model.SucursalNombre</small><br />
+            <small>@Model.FechaCierre.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <span>Apertura</span>
+            <span>@Model.FechaApertura.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+        </div>
+        <div class="d-flex justify-content-between">
+            <span>Atendió</span>
+            <span>@Model.UsuarioNombre</span>
+        </div>
+
+        <hr />
+
+        <div class="d-flex justify-content-between">
+            <span>Subtotal</span>
+            <span>$@Model.Subtotal.ToString("N2")</span>
+        </div>
+        <div class="d-flex justify-content-between">
+            <span>Impuestos</span>
+            <span>$@Model.Impuestos.ToString("N2")</span>
+        </div>
+        <div class="d-flex justify-content-between fw-bold">
+            <span>TOTAL VENTAS</span>
+            <span>$@Model.TotalVentas.ToString("N2")</span>
+        </div>
+        <div class="d-flex justify-content-between">
+            <span>Tickets</span>
+            <span>@Model.CantidadVentas</span>
+        </div>
+        <div class="d-flex justify-content-between">
+            <span>Cancelados</span>
+            <span>@Model.CantidadCanceladas</span>
+        </div>
+
+        <hr />
+
+        <div class="d-flex justify-content-between">
+            <span>Ventas efectivo</span>
+            <span>$@Model.VentasEfectivo.ToString("N2")</span>
+        </div>
+        <div class="d-flex justify-content-between">
+            <span>Ventas tarjeta</span>
+            <span>$@Model.VentasTarjeta.ToString("N2")</span>
+        </div>
+        <div class="d-flex justify-content-between">
+            <span>Ventas otros</span>
+            <span>$@Model.VentasOtros.ToString("N2")</span>
+        </div>
+
+        <hr />
+
+        <div class="d-flex justify-content-between">
+            <span>Fondo inicial</span>
+            <span>$@Model.FondoInicial.ToString("N2")</span>
+        </div>
+        <div class="d-flex justify-content-between fw-bold">
+            <span>Esperado en caja</span>
+            <span>$@esperado.ToString("N2")</span>
+        </div>
+        <div class="d-flex justify-content-between">
+            <span>Fondo final</span>
+            <span>$@(Model.FondoFinal?.ToString("N2") ?? "—")</span>
+        </div>
+        <div class="d-flex justify-content-between @(Model.FondoFinal.HasValue && Model.FondoFinal.Value != esperado ? "text-danger fw-bold" : "text-success fw-bold")">
+            <span>Diferencia</span>
+            <span>$@(Model.FondoFinal.HasValue ? (Model.FondoFinal.Value - esperado).ToString("N2") : "—")</span>
+        </div>
+
+        <div class="text-center mt-4 small">CajaVenta</div>
+    </div>
+</div>

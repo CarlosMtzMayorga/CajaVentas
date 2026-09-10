@@ -8,9 +8,13 @@ public class ReportesModel
     public Guid SucursalId { get; set; }
     public string SucursalNombre { get; set; } = string.Empty;
     public List<SucursalDto> Sucursales { get; set; } = new();
+    public Guid CajaId { get; set; }
+    public string CajaNombre { get; set; } = string.Empty;
+    public List<CajaDto> Cajas { get; set; } = new();
     public DateTime Desde { get; set; }
     public DateTime Hasta { get; set; }
     public List<VentaDto> Ventas { get; set; } = new();
+    public List<CorteZDto> CortesZ { get; set; } = new();
     public List<ResumenDetalle> TopProductos { get; set; } = new();
     public List<ResumenMetodo> PorMetodo { get; set; } = new();
     public List<StockProductoDto> StockBajo { get; set; } = new();

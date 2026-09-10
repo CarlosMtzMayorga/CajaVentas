@@ -9,5 +9,5 @@ public interface IVentaRepository
     Task<IEnumerable<Venta>> ObtenerPorTurnoAsync(Guid turnoCajaId);
     Task<Venta> CrearAsync(Venta venta);
     Task ActualizarAsync(Venta venta);
-    Task<IEnumerable<Venta>> ObtenerPorRangoFechasAsync(DateTime inicio, DateTime fin, Guid? sucursalId = null);
+    Task<IEnumerable<Venta>> ObtenerPorRangoFechasAsync(DateTime inicio, DateTime fin, Guid? sucursalId = null, Guid? cajaId = null);
 }

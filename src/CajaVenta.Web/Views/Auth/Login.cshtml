@@ -15,6 +15,13 @@
         <div class="alert alert-warning py-2 small">Debes iniciar sesión para continuar.</div>
     }
 
+    @if (ViewData["MensajeLicencia"] is string msgLicencia)
+    {
+        <div class="alert alert-warning py-2 small">
+            <i class="bi bi-exclamation-triangle"></i> @msgLicencia
+        </div>
+    }
+
     @if (!ViewData.ModelState.IsValid)
     {
         <div class="alert alert-danger">

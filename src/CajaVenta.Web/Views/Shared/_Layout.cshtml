@@ -104,7 +104,10 @@
         <main class="flex-grow-1 content-area">
             <header class="topbar">
                 <div class="page-title">@((string?)ViewData["Title"] ?? "CajaVenta")</div>
-                @await Component.InvokeAsync("TurnoStatus")
+                <div class="d-flex align-items-center gap-4">
+                    @await Component.InvokeAsync("LicenciaStatus")
+                    @await Component.InvokeAsync("TurnoStatus")
+                </div>
             </header>
             <div class="content-wrap">
                 @RenderBody()

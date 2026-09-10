@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using CajaVenta.Infrastructure.Persistence;
 using CajaVenta.Application.Security;
+using CajaVenta.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -12,15 +13,22 @@ namespace CajaVenta.Web.Controllers;
 public class AuthController : Controller
 {
     private readonly CajaVentaDbContext _context;
+    private readonly ILicenciaClienteService _licencia;
 
-    public AuthController(CajaVentaDbContext context)
-        => _context = context;
+    public AuthController(CajaVentaDbContext context, ILicenciaClienteService licencia)
+    {
+        _context = context;
+        _licencia = licencia;
+    }
 
     [AllowAnonymous]
-    public IActionResult Login(string? returnUrl = null)
+    public IActionResult Login(string? returnUrl = null, string? licencia = null)
     {
         if (User.Identity?.IsAuthenticated == true)
             return RedirectToAction("Index", "Pos");
+
+        if (licencia == "inactiva")
+            ViewData["MensajeLicencia"] = "Su suscripción está suspendida o vencida. Contacte a su proveedor (portal CajaVenta) para reactivarla.";
 
         ViewData["ReturnUrl"] = returnUrl;
         return View();
@@ -52,6 +60,17 @@ public class AuthController : Controller
         {
             ModelState.AddModelError(string.Empty, "El usuario está inactivo");
             return View();
+        }
+
+        if (_licencia.EstaConfigurada)
+        {
+            var estado = await _licencia.ObtenerEstadoDirectoAsync();
+            if (!estado.EstaActiva)
+            {
+                ModelState.AddModelError(string.Empty,
+                    "Suscripción suspendida o vencida. Contacte a su proveedor (portal CajaVenta) para reactivarla.");
+                return View();
+            }
         }
 
         usuario.UltimoAcceso = DateTime.UtcNow;

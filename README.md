@@ -1,6 +1,8 @@
-# CajaVenta — Sistema de Punto de Venta (POS)
+# CajaVenta — Sistema de Punto de Venta (POS) & Plataforma SaaS
 
-Sistema web de punto de venta ASP.NET Core (MVC, .NET 8) con **soporte multi-sucursal**: stock por sucursal, cajas por punto de venta, turnos por caja y usuarios con sucursal asignada.
+Sistema web de punto de venta ASP.NET Core (MVC, .NET 8) con **soporte multi-sucursal**, cortes de caja (Corte X y Corte Z persistido), control de inventario independiente, roles y permisos, y **Portal SaaS de suscripciones** con aprovisionamiento automático de base de datos SQLite aislada por cliente y validación de licencias.
+
+Repositorio: [https://github.com/CarlosMtzMayorga/CajaVentas.git](https://github.com/CarlosMtzMayorga/CajaVentas.git)
 
 ---
 
@@ -26,15 +28,16 @@ Sistema web de punto de venta ASP.NET Core (MVC, .NET 8) con **soporte multi-suc
 
 ## Características
 
-- **Punto de venta (POS)**: cobro por código de barras, carrito, ticket y corte de caja (corte X).
+- **Punto de venta (POS)**: cobro por código de barras, carrito, ticket y cortes de caja (**Corte X** y **Corte Z persistido**).
 - **Multi-sucursal**: cada sucursal tiene su propio stock independiente.
 - **Cajas por punto de venta**: una caja = un turno abierto a la vez.
-- **Turnos de caja**: apertura con fondo inicial, cierre con corte X.
+- **Turnos de caja**: apertura con fondo inicial, cierre con conteo de efectivo, corte X y generación automática de corte Z persistido.
 - **Inventario por sucursal**: entradas, salidas, ajustes, historial por producto y alertas de stock bajo.
 - **Ventas con clientes**: catálogo de clientes y constancias (RFC).
 - **Usuarios y roles**: Admin (global) y Cajero (asignado a una sucursal).
-- **Reportes**: ventas por rango de fechas y sucursal; stock bajo por sucursal.
-- **SQLite**: base de datos ligera, sin servidor (archivo `src/CajaVenta.db`).
+- **Reportes**: ventas por rango de fechas, sucursal y caja; historial de Cortes Z; stock bajo por sucursal.
+- **Validación de Licencias / SaaS**: integración con el portal SaaS para validación automática del estado de suscripción y bloqueo de acceso cuando la licencia esté suspendida/vencida.
+- **SQLite**: base de datos ligera, sin servidor (archivo `src/CajaVenta.db` para standalone o aprovisionada por cliente en modo SaaS).
 
 ---
 
@@ -94,9 +97,21 @@ El sistema se renta como **SaaS por suscripción mensual** a través del **Porta
 - **Pagos** (`/Pagos`): historial, registrar pago manual y página de pago simulada en modo Demo.
 - **Planes** (`/Planes`): CRUD de planes con precio mensual y activo/inactivo.
 
-### API de licencias
+### API y Validación de licencias
 
-`GET /api/licencia/{urlAcceso}` devuelve el estado de la licencia del cliente (nombre, plan, vencimiento, último pago, si está activa), útil para que cada instancia en producción valide su suscripción.
+- **Endpoint en el Portal**: `GET /api/licencia/{urlAcceso}` devuelve el estado actual de la suscripción (nombre del negocio, plan, fecha de vencimiento, último pago y bandera `estaActiva`).
+- **Consumo en el POS (`CajaVenta.Web`)**:
+  - Configuración en `appsettings.json`:
+    ```json
+    "Licencia": {
+      "PortalUrl": "http://localhost:5001",
+      "Identificador": "mi-negocio"
+    }
+    ```
+  - `LicenciaClienteService` consulta periódicamente el portal (con caché en memoria de 30 segundos).
+  - `LicenciaMiddleware` protege todas las rutas autenticadas: si la suscripción está suspendida o vencida, cierra la sesión del usuario y redirige al login con un mensaje explicativo.
+  - En el inicio de sesión (`AuthController`), se valida la licencia en tiempo real antes de permitir el acceso.
+  - En la barra superior (`_Layout.cshtml`) se muestra una insignia con el plan actual y la fecha de vencimiento (`LicenciaStatusViewComponent`).
 
 ### Usuarios del portal
 
@@ -185,8 +200,9 @@ Para partir de cero:
 
 ### Turnos (`/Turnos`)
 - Un turno abierto por caja; al abrir se registra sucursal y caja.
-- Cierre con conteo de efectivo y **corte X** imprimible (ventas, tickets, fondo).
-- Historial con sucursal y caja.
+- Cierre con conteo de efectivo y **corte X** imprimible (ventas, tickets, fondo, diferencia).
+- Al cerrar el turno se genera y persiste automáticamente el **Corte Z** con el resumen contable final (folio único, desglose de métodos de pago, ventas totales y efectivo esperado vs real).
+- Historial de turnos con consulta e impresión de tickets de Corte Z.
 
 ### Inventario (`/Inventarios`)
 - Selector de sucursal; catálogo de stock por producto (existencias, valor, estado OK/por debajo del mínimo/sin existencias).
@@ -206,7 +222,8 @@ Para partir de cero:
 - CRUD de usuarios, rol (Admin/Cajero), sucursal asignada y restablecimiento de contraseña.
 
 ### Reportes (`/Reportes`)
-- Ventas por rango de fechas y sucursal (total, impuestos, efectivo, tickets).
+- Ventas por rango de fechas, sucursal y caja (total, impuestos, efectivo, tickets).
+- Historial y reimpresión de **Cortes Z** con filtros por sucursal, caja y fechas.
 - Alertas de stock bajo y sin existencias por sucursal.
 
 ---
@@ -237,7 +254,8 @@ Sucursal ─┬─ Caja
           └─ Usuario (SucursalId, opcional)
           └─ StockInventario (ProductoId + SucursalId, StockActual)
           └─ TurnoCaja (SucursalId, CajaId, UsuarioId)
-              └─ Venta (TurnoCajaId) ─ VentasDetalle (ProductoId)
+              ├─ Venta (TurnoCajaId) ─ VentasDetalle (ProductoId)
+              └─ CorteZ (TurnoCajaId, Folio, Montos y Conteo)
           └─ MovimientoInventario (ProductoId, SucursalId, Tipo, Cantidad, CostoUnitario)
 Producto ─┴─ StockInventario / MovimientosInventario / VentasDetalle
 Cliente ── Venta (ClienteId)
@@ -250,7 +268,7 @@ Configuraciones EF en `Infrastructure/Persistence/Configurations`.
 `CajaVenta.Infrastructure/Persistence/EsquemaMigracion.cs` (`Aplicar(context)`) es idempotente (se puede ejecutar varias veces) y sobre una base existente:
 
 1. Agrega columnas si faltan: `Usuarios.SucursalId`, `TurnosCaja.SucursalId`, `TurnosCaja.CajaId`, `MovimientosInventario.SucursalId`.
-2. Crea tablas si no existen: `Sucursales`, `Cajas`, `StocksInventario` (+ índices).
+2. Crea tablas si no existen: `Sucursales`, `Cajas`, `StocksInventario`, `CortesZ` (+ índices).
 3. *Backfill*: crea la sucursal/caja principal, asigna los usuarios no-Admin a la sucursal principal, rellena `SucursalId`/`CajaId` de turnos y movimientos existentes, y genera `StocksInventario` a partir de la columna legada `Productos.StockActual` (si existía).
 
 El seed (`SeedData`, en `CajaVenta.Infrastructure/Seed`) solo corre cuando la base está vacía y crea: sucursal/caja principales, `admin` (global) y `cajero` (Sucursal Principal), productos de ejemplo, y por cada producto un movimiento de entrada + su fila de `StocksInventario`. El Portal reutiliza el mismo seed al **provisionar la base de cada cliente SaaS**.
@@ -264,15 +282,15 @@ src/
 ├── CajaVenta.Domain/
 │   ├── Common/            BaseEntity
 │   ├── Entities/          Sucursal, Caja, StockInventario, Producto, Usuario,
-│   │                      TurnoCaja, Venta, VentaDetalle, MovimientoInventario, Cliente...
+│   │                      TurnoCaja, CorteZ, Venta, VentaDetalle, MovimientoInventario, Cliente...
 │   ├── Enums/             RolUsuario, EstadoTurno, TipoMovimientoInventario, EstadoVenta...
-│   └── Interfaces/        ISucursalRepository, IUsuarioRepository, IInventarioRepository...
+│   └── Interfaces/        ISucursalRepository, IUsuarioRepository, IInventarioRepository, ICorteZRepository...
 ├── CajaVenta.Application/
 │   ├── Common/            Result<T>, PasswordHasher
-│   ├── DTOs/             SucursalDto, CajaDto, StockProductoDto, TurnoCajaDto, CorteXDto...
-│   ├── Interfaces/       ISucursalService, IUsuarioService, IInventarioService, ITurnoService...
+│   ├── DTOs/             SucursalDto, CajaDto, StockProductoDto, TurnoCajaDto, CorteXDto, CorteZDto...
+│   ├── Interfaces/       ISucursalService, IUsuarioService, IInventarioService, ITurnoService, ICorteZService...
 │   └── Services/         SucursalService, UsuarioService, ProductoService, InventarioService,
-│                         TurnoService, VentaService, ClienteService
+│                         TurnoService, CorteZService, VentaService, ClienteService
 ├── CajaVenta.Infrastructure/
 │   ├── DependencyInjection.cs
 │   ├── Seed/SeedData.cs
@@ -282,8 +300,11 @@ src/
 │       ├── Configurations/  (una clase por entidad)
 │       └── Repositories/    (implementaciones de las interfaces de dominio)
 ├── CajaVenta.Web/
-│   ├── Program.cs           (DI, auth, EnsureCreated, migración, seed)
+│   ├── Program.cs           (DI, auth, middleware de licencia, EnsureCreated, migración, seed)
 │   ├── SucursalContext.cs   (helper de claims: sucursal actual del usuario)
+│   ├── Middleware/          LicenciaMiddleware (control de acceso por suscripción)
+│   ├── Services/            LicenciaClienteService (cliente HTTP y caché del estado de licencia)
+│   ├── ViewComponents/      LicenciaStatusViewComponent, TurnoStatusViewComponent
 │   ├── Controllers/         Auth, Home, Pos, Turnos, Productos, Inventarios,
 │   │                        Clientes, Reportes, Sucursales, Usuarios
 │   ├── Models/              (modelos de las vistas)
@@ -311,7 +332,7 @@ src/
    - Descuenta `StockInventario` de la sucursal del turno.
    - Registra `MovimientoInventario` tipo Salida con `SucursalId` del turno.
    - Devuelve el folio; el POS redirige al ticket.
-5. Al cerrar el turno se genera el corte X (ventas, efectivo, tickets, fondo).
+5. Al cerrar el turno se genera el corte X (ventas, efectivo, tickets, fondo) y se persiste el **Corte Z** con el balance final.
 
 ---
 

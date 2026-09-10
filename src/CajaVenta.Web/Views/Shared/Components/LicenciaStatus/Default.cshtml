@@ -1,0 +1,16 @@
+@if (ViewData["LicenciaPlan"] is string plan && !string.IsNullOrWhiteSpace(plan))
+{
+    var activa = ViewData["LicenciaActiva"] is bool a && a;
+    var vence = ViewData["LicenciaVence"] as DateTime?;
+    <div class="d-flex align-items-center gap-3 small">
+        <span class="badge @(activa ? "status-open" : "text-bg-danger")" title="Licencia (suscripción)">
+            <i class="bi bi-patch-check"></i> Plan @plan
+        </span>
+        @if (vence.HasValue)
+        {
+            <span class="text-muted" title="Vencimiento de la licencia">
+                <i class="bi bi-calendar3"></i> Vence: <strong>@vence.Value.ToString("dd/MM/yyyy")</strong>
+            </span>
+        }
+    </div>
+}

@@ -1,0 +1,88 @@
+@model MovimientoModel
+@{ Layout = "_Layout"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Nuevo movimiento de inventario</h1>
+        <small class="text-muted">Entradas, salidas y ajustes de stock</small>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index" asp-controller="Inventarios">← Volver a inventario</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Error))
+{
+    <div class="alert alert-danger">@Model.Error</div>
+}
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form asp-action="Registrar" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Sucursal</label>
+                        <select asp-for="SucursalId" class="form-select" required>
+                            <option value="">— Selecciona la sucursal —</option>
+                            @foreach (var s in Model.Sucursales)
+                            {
+                                <option value="@s.Id" selected="@(Model.SucursalId == s.Id)">@s.Nombre</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Producto</label>
+                        <select asp-for="ProductoId" class="form-select" required>
+                            <option value="">— Selecciona un producto —</option>
+                            @foreach (var p in Model.Productos)
+                            {
+                                <option value="@p.ProductoId" selected="@(Model.ProductoId == p.ProductoId)">
+                                    @p.Nombre (@p.StockActual.ToString("N0") en stock)
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de movimiento</label>
+                        <select asp-for="Tipo" class="form-select">
+                            <option value="@((int)TipoMovimientoInventario.Entrada)">Entrada</option>
+                            <option value="@((int)TipoMovimientoInventario.Salida)">Salida</option>
+                            <option value="@((int)TipoMovimientoInventario.Ajuste)">Ajuste</option>
+                        </select>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6 mb-3">
+                            <label asp-for="Cantidad" class="form-label"></label>
+                            <input asp-for="Cantidad" class="form-control" type="number" step="0.01" min="0.01" />
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label asp-for="CostoUnitario" class="form-label"></label>
+                            <input asp-for="CostoUnitario" class="form-control" type="number" step="0.01" min="0" value="0" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Referencia" class="form-label"></label>
+                        <input asp-for="Referencia" class="form-control" placeholder="factura, proveedor, merma..." />
+                    </div>
+                    <div class="mb-4">
+                        <label asp-for="Observaciones" class="form-label"></label>
+                        <textarea asp-for="Observaciones" class="form-control" rows="2"></textarea>
+                    </div>
+                    <button class="btn btn-primary" type="submit">Registrar movimiento</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white fw-semibold">Ayuda</div>
+            <div class="card-body small">
+                <ul class="mb-0">
+                    <li><strong>Entrada:</strong> aumenta el stock (compras a proveedor, devoluciones).</li>
+                    <li><strong>Salida:</strong> disminuye el stock (mermas, salidas internas). Debe haber existencias.</li>
+                    <li><strong>Ajuste:</strong> corrige el stock; usa cantidad negativa para reducir y positiva para aumentar.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

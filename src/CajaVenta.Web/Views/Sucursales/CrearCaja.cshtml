@@ -1,0 +1,31 @@
+@model CrearCajaDto
+@{ Layout = "_Layout"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Nueva caja</h1>
+        <small class="text-muted">Registra una caja para un punto de venta de la sucursal</small>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Cajas" asp-route-sucursalId="@Model.SucursalId">← Volver</a>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form asp-action="CrearCaja" method="post">
+                    <input type="hidden" asp-for="SucursalId" />
+                    <div class="mb-3">
+                        <label asp-for="Nombre" class="form-label"></label>
+                        <input asp-for="Nombre" class="form-control" placeholder="Caja 1, Caja Principal..." required />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Notas" class="form-label"></label>
+                        <textarea asp-for="Notas" class="form-control" rows="2"></textarea>
+                    </div>
+                    <button class="btn btn-primary" type="submit">Crear caja</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,86 @@
+@model ClienteFormModel
+@using CajaVenta.Web.Models
+@{ Layout = "_Layout"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Editar cliente</h1>
+        <small class="text-uppercase fw-semibold text-secondary" style="letter-spacing:.02em">RFC @Model.RFC</small>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index">Volver</a>
+</div>
+
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+<form method="post" enctype="multipart/form-data" class="card shadow-sm">
+    <div class="card-body">
+        <input type="hidden" asp-for="Id" />
+        <div class="row g-3">
+            <div class="col-md-8">
+                <label class="form-label">Razón social / Nombre *</label>
+                <input asp-for="NombreRazonSocial" class="form-control" />
+                <span asp-validation-for="NombreRazonSocial" class="text-danger small"></span>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Nombre comercial</label>
+                <input asp-for="NombreComercial" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">RFC</label>
+                <input class="form-control text-uppercase" value="@Model.RFC" disabled />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Régimen fiscal</label>
+                <select asp-for="RegimenFiscal" class="form-select">
+                    <option value="">Selecciona...</option>
+                    @foreach (var r in FiscalUI.RegimenesFiscales)
+                    {
+                        <option value="@r.Codigo">@r.Codigo - @r.Texto</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Uso de CFDI</label>
+                <select asp-for="UsoCFDI" class="form-select">
+                    <option value="">Selecciona...</option>
+                    @foreach (var u in FiscalUI.UsosCFDI)
+                    {
+                        <option value="@u.Codigo">@u.Codigo - @u.Texto</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Correo</label>
+                <input asp-for="Email" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Teléfono</label>
+                <input asp-for="Telefono" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Código postal</label>
+                <input asp-for="CodigoPostal" class="form-control" maxlength="5" />
+            </div>
+            <div class="col-12">
+                <label class="form-label">Notas</label>
+                <textarea asp-for="Notas" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="col-12">
+                <label class="form-label">Constancia de situación fiscal</label>
+                @if (Model.TieneConstancia)
+                {
+                    <div class="mb-2">
+                        <span class="badge text-bg-success">Constancia vigente: @Model.ConstanciaOriginalNombre</span>
+                    </div>
+                }
+                <input asp-for="Constancia" class="form-control" type="file" accept=".pdf,.xml,.jpg,.jpeg,.png" />
+                <span asp-validation-for="Constancia" class="text-danger small"></span>
+                <div class="form-text">Si seleccionas un archivo nuevo, reemplaza la constancia anterior.</div>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer bg-white">
+        <button class="btn btn-primary" type="submit">Guardar cambios</button>
+        <a class="btn btn-link" asp-action="Index">Cancelar</a>
+    </div>
+</form>

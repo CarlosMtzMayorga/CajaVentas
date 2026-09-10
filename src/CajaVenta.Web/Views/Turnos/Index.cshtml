@@ -1,0 +1,160 @@
+@model TurnosIndexModel
+@{ Layout = "_Layout"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Turnos de caja</h1>
+        @if (!string.IsNullOrEmpty(Model.SucursalNombre))
+        {
+            <small class="text-muted">Sucursal: <strong>@Model.SucursalNombre</strong></small>
+        }
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Mensaje))
+{
+    <div class="alert alert-success alert-dismissible">@Model.Mensaje<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+@if (!string.IsNullOrEmpty(Model.Error))
+{
+    <div class="alert alert-danger">@Model.Error</div>
+}
+
+<div class="row g-3 mb-4">
+    @if (Model.TurnoAbierto is null)
+    {
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white fw-semibold">Abrir turno</div>
+                <div class="card-body">
+                    <form asp-action="Abrir" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label class="form-label">Caja</label>
+                            <select name="cajaId" class="form-select" required>
+                                <option value="">— Selecciona una caja —</option>
+                                @foreach (var c in Model.Cajas)
+                                {
+                                    <option value="@c.Id">@c.Nombre</option>
+                                }
+                            </select>
+                            @if (Model.Cajas.Count == 0)
+                            {
+                                <small class="text-muted">No hay cajas disponibles. Pide al administrador que configure una sucursal con cajas.</small>
+                            }
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Fondo inicial ($)</label>
+                            <input type="number" name="fondoInicial" class="form-control form-control-lg"
+                                   step="0.01" min="0" value="0" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones</label>
+                            <input type="text" name="observaciones" class="form-control" />
+                        </div>
+                        <button class="btn btn-success w-100" type="submit">Abrir turno</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        var t = Model.TurnoAbierto;
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-success">
+                <div class="card-header bg-white fw-semibold">
+                    <span class="badge status-open"><i class="bi bi-circle-fill"></i> Turno abierto</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 text-center mb-3">
+                        <div class="col-3">
+                            <div class="small text-muted">Fondo</div>
+                            <div class="fw-bold">$@t.FondoInicial.ToString("N2")</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="small text-muted">Ventas</div>
+                            <div class="fw-bold">$@t.TotalVentas.ToString("N2")</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="small text-muted">Tickets</div>
+                            <div class="fw-bold">@t.CantidadVentas</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="small text-muted">Efectivo</div>
+                            <div class="fw-bold">$@t.VentasEfectivo.ToString("N2")</div>
+                        </div>
+                    </div>
+                    <small class="text-muted d-block mb-3">Abierto el @t.FechaApertura.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+
+                    <form asp-action="ImprimirCorte" method="post" class="mb-3">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="turnoId" value="@t.Id" />
+                        <button class="btn btn-outline-primary w-100" type="submit">Generar corte (X)</button>
+                    </form>
+
+                    <form asp-action="Cerrar" method="post" onsubmit="return confirm('¿Cerrar el turno?');">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-2">
+                            <label class="form-label">Fondo final / efectivo en caja ($)</label>
+                            <input type="number" name="fondoFinal" class="form-control"
+                                   step="0.01" min="0" value="@((t.FondoInicial + t.TotalVentas).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))" required />
+                        </div>
+                        <input type="text" name="observaciones" class="form-control mb-2" placeholder="Observaciones" />
+                        <button class="btn btn-danger w-100" type="submit">Cerrar turno</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white fw-semibold">Historial de turnos (últimos 30 días)</div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Apertura</th>
+                    <th>Cierre</th>
+                    <th>Sucursal</th>
+                    <th>Caja</th>
+                    <th class="text-end">Fondo</th>
+                    <th class="text-end">Ventas</th>
+                    <th class="text-end">Efectivo</th>
+                    <th class="text-center">Tickets</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Historial.Count == 0)
+                {
+                    <tr><td colspan="9" class="text-center text-muted py-4">Sin turnos registrados</td></tr>
+                }
+                @foreach (var h in Model.Historial)
+                {
+                    <tr>
+                        <td>@h.FechaApertura.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@(h.FechaCierre?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")</td>
+                        <td>@h.SucursalNombre</td>
+                        <td>@h.CajaNombre</td>
+                        <td class="text-end">$@h.FondoInicial.ToString("N2")</td>
+                        <td class="text-end">$@h.TotalVentas.ToString("N2")</td>
+                        <td class="text-end">$@h.VentasEfectivo.ToString("N2")</td>
+                        <td class="text-center">@h.CantidadVentas</td>
+                        <td>
+                            @if (h.Estado == EstadoTurno.Abierto)
+                            {
+                                <span class="badge status-open">Abierto</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-secondary">Cerrado</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

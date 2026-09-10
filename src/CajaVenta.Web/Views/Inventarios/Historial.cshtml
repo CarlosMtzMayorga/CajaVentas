@@ -1,0 +1,54 @@
+@model HistorialModel
+@{ Layout = "_Layout"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Historial de movimientos</h1>
+        <small class="text-muted">@Model.ProductoNombre</small>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" asp-action="Registrar" asp-route-productoId="@Model.ProductoId">+ Entrada / salida</a>
+        <a class="btn btn-outline-secondary" asp-action="Index">← Volver a inventario</a>
+    </div>
+</div>
+
+<div class="card shadow-sm col-lg-10">
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th class="text-end">Cantidad</th>
+                    <th class="text-end">Costo unitario</th>
+                    <th>Referencia</th>
+                    <th>Observaciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Movimientos.Count == 0)
+                {
+                    <tr><td colspan="6" class="text-center text-muted py-4">Sin movimientos registrados</td></tr>
+                }
+                @foreach (var m in Model.Movimientos)
+                {
+                    var esNegativo = m.Cantidad < 0;
+                    <tr>
+                        <td>@m.Fecha.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            <span class="badge @(m.Tipo == TipoMovimientoInventario.Salida ? "text-bg-danger" : m.Tipo == TipoMovimientoInventario.Venta ? "text-bg-dark" : m.Tipo == TipoMovimientoInventario.Ajuste ? "text-bg-warning" : "text-bg-success")">
+                                @ImpuestoUI.Nombre(m.Tipo)
+                            </span>
+                        </td>
+                        <td class="text-end @(esNegativo ? "text-danger fw-bold" : "text-success fw-bold")">
+                            @(esNegativo ? "" : "+")@m.Cantidad.ToString("N2")
+                        </td>
+                        <td class="text-end">$@m.CostoUnitario.ToString("N2")</td>
+                        <td>@m.Referencia</td>
+                        <td>@m.Observaciones</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

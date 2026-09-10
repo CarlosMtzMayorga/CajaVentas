@@ -1,0 +1,229 @@
+:root {
+    --sidebar-width: 230px;
+    --brand: #0d6efd;
+    --bg: #f4f6fb;
+}
+
+body {
+    background: var(--bg);
+    font-size: 0.95rem;
+}
+
+/* ---- Login ---- */
+.login-body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0d6efd 0%, #0a4fbf 100%);
+}
+
+.login-page {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.login-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 2.5rem 2.2rem;
+    width: 420px;
+    max-width: 92vw;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.login-brand {
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--brand);
+}
+
+/* ---- Layout ---- */
+.sidebar {
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    border-right: 1px solid #e6e8ef;
+    z-index: 100;
+}
+
+.sidebar-brand {
+    font-weight: 800;
+    font-size: 1.35rem;
+    color: var(--brand);
+    padding: 1.25rem 1.25rem 0.5rem;
+}
+
+.sidebar-user {
+    padding: 0.5rem 1.25rem 1rem;
+    border-bottom: 1px solid #eef0f5;
+    margin-bottom: 0.5rem;
+}
+
+.sidebar-nav .nav-link {
+    padding: 0.65rem 1.25rem;
+    color: #4b5563;
+    border-left: 3px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.sidebar-nav .nav-link i {
+    font-size: 1.05rem;
+}
+
+.sidebar-nav .nav-link:hover {
+    background: #f0f4ff;
+    color: var(--brand);
+}
+
+.sidebar-nav .nav-link.active {
+    background: #e7efff;
+    color: var(--brand);
+    border-left-color: var(--brand);
+    font-weight: 600;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid #eef0f5;
+}
+
+.content-area {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.topbar {
+    background: #fff;
+    border-bottom: 1px solid #e6e8ef;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+}
+
+.page-title {
+    font-weight: 700;
+}
+
+.content-wrap {
+    padding: 1.5rem;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+/* ---- POS ---- */
+.scan-form .form-control {
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.total-amount {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--brand);
+}
+
+.total-amount.large {
+    font-size: 2rem;
+}
+
+.status-open {
+    background: #def6e5;
+    color: #16763a;
+    font-weight: 600;
+}
+
+.status-closed {
+    background: #fdecea;
+    color: #b02a2a;
+    font-weight: 600;
+}
+
+/* ---- Ticket / print ---- */
+.ticket-wrap {
+    display: flex;
+    justify-content: center;
+}
+
+.ticket {
+    width: 320px;
+    background: #fff;
+    border: 1px solid #e6e8ef;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    font-family: ui-monospace, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.85rem;
+}
+
+.ticket table th,
+.ticket table td {
+    font-size: 0.8rem;
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .ticket,
+    .ticket * {
+        visibility: visible;
+    }
+
+    .ticket {
+        position: absolute;
+        left: 0;
+        top: 0;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+
+    .topbar,
+    .sidebar {
+        display: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 64px;
+        min-width: 64px;
+    }
+
+    .sidebar-brand {
+        font-size: 0;
+    }
+
+    .sidebar-brand::first-letter {
+        font-size: 1.3rem;
+    }
+
+    .sidebar-nav .nav-link span {
+        display: none;
+    }
+
+    .sidebar-user,
+    .sidebar-footer {
+        display: none;
+    }
+}

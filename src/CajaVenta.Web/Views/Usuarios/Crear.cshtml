@@ -1,0 +1,61 @@
+@model CrearUsuarioModel
+@{ Layout = "_Layout"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Nuevo usuario</h1>
+        <small class="text-muted">El admin es global; los cajeros se asignan a una sucursal</small>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index">← Volver</a>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form asp-action="Crear" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <div class="mb-3">
+                        <label asp-for="Nombre" class="form-label"></label>
+                        <input asp-for="Nombre" class="form-control" required />
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6 mb-3">
+                            <label asp-for="NombreUsuario" class="form-label"></label>
+                            <input asp-for="NombreUsuario" class="form-control" required />
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label asp-for="Contrasena" class="form-label"></label>
+                            <input asp-for="Contrasena" class="form-control" type="password" required minlength="6" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" type="email" />
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6 mb-3">
+                            <label asp-for="Rol" class="form-label"></label>
+                            <select asp-for="Rol" class="form-select">
+                                <option value="Cajero">Cajero</option>
+                                <option value="Admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label asp-for="SucursalId" class="form-label">Sucursal</label>
+                            <select asp-for="SucursalId" class="form-select">
+                                <option value="">— Global —</option>
+                                @foreach (var s in Model.Sucursales)
+                                {
+                                    <option value="@s.Id" selected="@(Model.SucursalId == s.Id)">@s.Nombre</option>
+                                }
+                            </select>
+                            <small class="text-muted">Dejar vacío = acceso global (Admin)</small>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" type="submit">Crear usuario</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

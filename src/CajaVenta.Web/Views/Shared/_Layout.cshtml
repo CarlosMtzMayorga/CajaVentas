@@ -1,0 +1,101 @@
+@using System.Security.Claims
+@{
+    var nombre = User.FindFirstValue("Nombre");
+    var rol = User.FindFirstValue(ClaimTypes.Role);
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] is string t ? t + " — " : "")CajaVenta</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="d-flex vh-100">
+        <nav class="sidebar bg-white shadow-sm">
+            <div class="sidebar-brand">CajaVenta</div>
+            <div class="sidebar-user">
+                <div class="fw-semibold">@nombre</div>
+                <small class="text-muted">@rol</small>
+            </div>
+            <ul class="nav flex-column sidebar-nav">
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Pos" ? "active" : "")"
+                       asp-controller="Pos" asp-action="Index">
+                        <i class="bi bi-cart3"></i> Punto de Venta
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Turnos" ? "active" : "")"
+                       asp-controller="Turnos" asp-action="Index">
+                        <i class="bi bi-clock-history"></i> Turnos de caja
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Productos" ? "active" : "")"
+                       asp-controller="Productos" asp-action="Index">
+                        <i class="bi bi-box-seam"></i> Productos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Inventarios" ? "active" : "")"
+                       asp-controller="Inventarios" asp-action="Index">
+                        <i class="bi bi-graph-down-arrow"></i> Inventarios
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Clientes" ? "active" : "")"
+                       asp-controller="Clientes" asp-action="Index">
+                        <i class="bi bi-people"></i> Clientes
+                    </a>
+                </li>
+                @if (User.IsInRole("Admin"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Sucursales" ? "active" : "")"
+                           asp-controller="Sucursales" asp-action="Index">
+                            <i class="bi bi-buildings"></i> Sucursales
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Usuarios" ? "active" : "")"
+                           asp-controller="Usuarios" asp-action="Index">
+                            <i class="bi bi-person-badge"></i> Usuarios
+                        </a>
+                    </li>
+                }
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reportes" ? "active" : "")"
+                       asp-controller="Reportes" asp-action="Index">
+                        <i class="bi bi-graph-up"></i> Reportes
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <form asp-controller="Auth" asp-action="Logout" method="post">
+                    @Html.AntiForgeryToken()
+                    <button class="btn btn-outline-danger btn-sm w-100">
+                        <i class="bi bi-box-arrow-right"></i> Salir
+                    </button>
+                </form>
+            </div>
+        </nav>
+
+        <main class="flex-grow-1 content-area">
+            <header class="topbar">
+                <div class="page-title">@((string?)ViewData["Title"] ?? "CajaVenta")</div>
+                @await Component.InvokeAsync("TurnoStatus")
+            </header>
+            <div class="content-wrap">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

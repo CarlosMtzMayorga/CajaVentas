@@ -1,0 +1,47 @@
+@using System.Security.Claims
+@{
+    Layout = "_LoginLayout";
+    ViewData["Title"] = "Iniciar sesión";
+}
+
+<div class="login-card">
+    <div class="text-center mb-4">
+        <h1 class="login-brand">CajaVenta</h1>
+        <p class="text-muted mb-0">Sistema de Punto de Venta</p>
+    </div>
+
+    @if (!string.IsNullOrEmpty(ViewData["ReturnUrl"] as string))
+    {
+        <div class="alert alert-warning py-2 small">Debes iniciar sesión para continuar.</div>
+    }
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <div>@error.ErrorMessage</div>
+            }
+        </div>
+    }
+
+    <form asp-controller="Auth" asp-action="Login" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+        <div class="mb-3">
+            <label class="form-label" for="nombreUsuario">Usuario</label>
+            <input type="text" id="nombreUsuario" name="nombreUsuario" class="form-control form-control-lg"
+                   placeholder="admin" autofocus autocomplete="username" required />
+        </div>
+        <div class="mb-4">
+            <label class="form-label" for="contrasena">Contraseña</label>
+            <input type="password" id="contrasena" name="contrasena" class="form-control form-control-lg"
+                   placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+        <button class="btn btn-primary btn-lg w-100" type="submit">Entrar</button>
+    </form>
+
+    <div class="text-center mt-4 small text-muted">
+        Usuario de prueba: <code>admin</code> / <code>admin123</code>
+    </div>
+</div>

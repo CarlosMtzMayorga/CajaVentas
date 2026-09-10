@@ -1,0 +1,9 @@
+@if (ViewData["TurnoFondo"] is not null)
+{
+    <div class="d-flex align-items-center gap-3 small">
+        <span class="badge status-open"><i class="bi bi-circle-fill"></i> Turno abierto</span>
+        <span class="text-muted">Fondo: <strong>$@(((decimal)ViewData["TurnoFondo"]!).ToString("N2"))</strong></span>
+        <span class="text-muted">Ventas: <strong>$@(((decimal)ViewData["TurnoVentas"]!).ToString("N2"))</strong></span>
+        <span class="text-muted">Tickets: <strong>@ViewData["TurnoCantidad"]</strong></span>
+    </div>
+}

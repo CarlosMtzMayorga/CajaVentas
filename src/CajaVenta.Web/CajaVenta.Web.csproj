@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>CajaVenta.Web</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CajaVenta.Application\CajaVenta.Application.csproj" />
+    <ProjectReference Include="..\CajaVenta.Infrastructure\CajaVenta.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

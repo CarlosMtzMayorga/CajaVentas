@@ -1,0 +1,131 @@
+@model InventarioMovimientosModel
+@{ Layout = "_Layout"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Movimientos de inventario</h1>
+        @if (!string.IsNullOrEmpty(Model.ProductoNombre))
+        {
+            <small class="text-muted">Producto: <strong>@Model.ProductoNombre</strong></small>
+        }
+        else
+        {
+            <small class="text-muted">Entradas, salidas, ajustes y ventas</small>
+        }
+    </div>
+    <a class="btn btn-primary" asp-action="Registrar">+ Nueva entrada / salida</a>
+</div>
+
+@if (Model.Mensaje is not null)
+{
+    <div class="alert alert-success alert-dismissible">@Model.Mensaje<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger">@Model.Error</div>
+}
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-auto">
+                <label class="form-label small mb-1">Sucursal</label>
+                <select name="sucursalId" class="form-select">
+                    @foreach (var s in Model.Sucursales)
+                    {
+                        <option value="@s.Id" selected="@(Model.SucursalId == s.Id)">@s.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label small mb-1">Desde</label>
+                <input type="date" name="desde" class="form-control" value="@(Model.Desde?.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="col-auto">
+                <label class="form-label small mb-1">Hasta</label>
+                <input type="date" name="hasta" class="form-control" value="@(Model.Hasta?.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="col-auto">
+                <label class="form-label small mb-1">Tipo</label>
+                <select name="tipo" class="form-select">
+                    <option value="">Todos</option>
+                    @foreach (var t in Enum.GetValues<TipoMovimientoInventario>())
+                    {
+                        <option value="@((int)t)" selected="@(Model.Tipo == t)">@ImpuestoUI.Nombre(t)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label small mb-1">Producto</label>
+                <select name="productoId" class="form-select">
+                    <option value="">Todos</option>
+                    @foreach (var p in Model.Productos)
+                    {
+                        <option value="@p.Id" selected="@(Model.ProductoId == p.Id)">@p.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label small mb-1">Buscar</label>
+                <input type="text" name="termino" class="form-control" value="@Model.Termino" placeholder="código, producto, referencia" />
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-outline-primary" type="submit">Filtrar</button>
+                <a class="btn btn-link" asp-action="Movimientos">Limpiar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white fw-semibold">
+        @Model.Movimientos.Count movimiento(s)
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Producto</th>
+                    <th>Sucursal</th>
+                    <th class="text-center">Tipo</th>
+                    <th class="text-end">Cantidad</th>
+                    <th class="text-end">Costo unitario</th>
+                    <th class="text-end">Importe</th>
+                    <th>Referencia</th>
+                    <th>Observaciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Movimientos.Count == 0)
+                {
+                    <tr><td colspan="9" class="text-center text-muted py-4">Sin movimientos con los filtros actuales</td></tr>
+                }
+                @foreach (var m in Model.Movimientos)
+                {
+                    var esNegativo = m.Cantidad < 0;
+                    <tr>
+                        <td>@m.Fecha.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            <span class="fw-semibold">@m.ProductoNombre</span>
+                            <div class="small text-muted">@m.ProductoCodigoBarras</div>
+                        </td>
+                        <td>@m.SucursalNombre</td>
+                        <td class="text-center">
+                            <span class="badge @(m.Tipo == TipoMovimientoInventario.Salida ? "text-bg-danger" : m.Tipo == TipoMovimientoInventario.Venta ? "text-bg-dark" : m.Tipo == TipoMovimientoInventario.Ajuste ? "text-bg-warning" : "text-bg-success")">
+                                @ImpuestoUI.Nombre(m.Tipo)
+                            </span>
+                        </td>
+                        <td class="text-end @(esNegativo ? "text-danger fw-bold" : "text-success fw-bold")">
+                            @(esNegativo ? "" : "+")@m.Cantidad.ToString("N2")
+                        </td>
+                        <td class="text-end">$@m.CostoUnitario.ToString("N2")</td>
+                        <td class="text-end">$@(Math.Abs(m.Cantidad * m.CostoUnitario).ToString("N2"))</td>
+                        <td>@m.Referencia</td>
+                        <td>@m.Observaciones</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

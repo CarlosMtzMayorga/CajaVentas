@@ -1,0 +1,81 @@
+@model CajasIndexModel
+@{ Layout = "_Layout"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Cajas de @Model.Sucursal.Nombre</h1>
+        <small class="text-muted">Una caja = un turno abierto a la vez (punto de caja)</small>
+    </div>
+    <a class="btn btn-outline-secondary me-2" asp-action="Index">← Sucursales</a>
+    <a class="btn btn-primary" asp-action="CrearCaja" asp-route-sucursalId="@Model.Sucursal.Id">+ Nueva caja</a>
+</div>
+
+@if (Model.Mensaje is not null)
+{
+    <div class="alert alert-success alert-dismissible">@Model.Mensaje<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger">@Model.Error</div>
+}
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white fw-semibold">
+        @Model.Cajas.Count caja(s)
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Caja</th>
+                    <th>Notas</th>
+                    <th class="text-center">Turno</th>
+                    <th class="text-center">Estatus</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Cajas.Count == 0)
+                {
+                    <tr><td colspan="5" class="text-center text-muted py-4">Esta sucursal no tiene cajas aún</td></tr>
+                }
+                @foreach (var c in Model.Cajas)
+                {
+                    <tr class="@(c.Activo ? "" : "table-secondary")">
+                        <td class="fw-semibold">@c.Nombre</td>
+                        <td class="small">@c.Notas</td>
+                        <td class="text-center">
+                            @if (c.TurnoAbierto)
+                            {
+                                <span class="badge status-open">En uso</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-secondary">Libre</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            @if (c.Activo)
+                            {
+                                <span class="badge text-bg-success">Activa</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-secondary">Inactiva</span>
+                            }
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <a class="btn btn-sm btn-outline-primary" asp-action="EditarCaja" asp-route-cajaId="@c.Id">Editar</a>
+                            <form method="post" asp-action="AlternarActivoCaja"
+                                  asp-route-cajaId="@c.Id" asp-route-activo="@(!c.Activo)" asp-route-sucursalId="@Model.Sucursal.Id" class="d-inline">
+                                <button type="submit" class="btn btn-sm @(c.Activo ? "btn-outline-danger" : "btn-outline-success")">
+                                    @(c.Activo ? "Desactivar" : "Activar")
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

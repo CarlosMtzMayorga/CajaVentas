@@ -1,0 +1,88 @@
+@model ProductosIndexModel
+@{ Layout = "_Layout"; var esAdmin = User.IsInRole("Admin"); }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Productos</h1>
+        <small class="text-muted">Catálogo e inventario</small>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" asp-controller="Inventarios" asp-action="Registrar">Entrada / salida</a>
+        @if (esAdmin)
+        {
+            <a class="btn btn-primary" asp-action="Crear">+ Nuevo producto</a>
+        }
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Mensaje))
+{
+    <div class="alert alert-success alert-dismissible">
+        @Model.Mensaje
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (!string.IsNullOrEmpty(Model.Error))
+{
+    <div class="alert alert-danger">@Model.Error</div>
+}
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <input type="text" name="q" class="form-control" value="@Model.Busqueda"
+               placeholder="Buscar por nombre o código..." />
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-outline-primary" type="submit">Buscar</button>
+        @if (!string.IsNullOrWhiteSpace(Model.Busqueda))
+        {
+            <a class="btn btn-link" asp-action="Index">Limpiar</a>
+        }
+    </div>
+</form>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Código</th>
+                    <th>Producto</th>
+                    <th class="text-end">Costo</th>
+                    <th class="text-end">Precio venta</th>
+                    <th class="text-center">Impuesto</th>
+                    <th class="text-end" style="width:250px">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Productos.Count == 0)
+                {
+                    <tr><td colspan="6" class="text-center text-muted py-4">No se encontraron productos</td></tr>
+                }
+                @foreach (var p in Model.Productos)
+                {
+                    <tr>
+                        <td>@p.CodigoBarras</td>
+                        <td class="fw-semibold">@p.Nombre</td>
+                        <td class="text-end">$@p.Costo.ToString("N2")</td>
+                        <td class="text-end">$@p.PrecioVenta.ToString("N2")</td>
+                        <td class="text-center"><span class="badge text-bg-light border">@ImpuestoUI.Nombre(p.TipoImpuesto)</span></td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary" asp-controller="Inventarios" asp-action="Historial" asp-route-productoId="@p.Id">Historial</a>
+                            @if (esAdmin)
+                            {
+                                <a class="btn btn-sm btn-outline-secondary" asp-action="Editar" asp-route-id="@p.Id">Editar</a>
+                                <form asp-action="Eliminar" method="post" class="d-inline"
+                                      onsubmit="return confirm('¿Eliminar @p.Nombre?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@p.Id" />
+                                    <button class="btn btn-sm btn-outline-danger">Eliminar</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

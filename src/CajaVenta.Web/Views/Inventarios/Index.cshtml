@@ -1,0 +1,145 @@
+@model InventarioResumenModel
+@{ Layout = "_Layout"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Inventario</h1>
+        <small class="text-muted">Sucursal: <strong>@Model.SucursalNombre</strong> — @Model.Stock.Count producto(s)</small>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" asp-action="Movimientos">Movimientos</a>
+        <a class="btn btn-primary" asp-action="Registrar">+ Entrada / salida</a>
+    </div>
+</div>
+
+@if (Model.Mensaje is not null)
+{
+    <div class="alert alert-success alert-dismissible">@Model.Mensaje<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger">@Model.Error</div>
+}
+
+<form method="get" class="mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-auto">
+            <label class="form-label small mb-1">Sucursal</label>
+            <select name="sucursalId" class="form-select" onchange="this.form.submit()">
+                @foreach (var s in Model.Sucursales)
+                {
+                    <option value="@s.Id" selected="@(s.Id == Model.SucursalId)">@s.Nombre</option>
+                }
+            </select>
+        </div>
+    </div>
+</form>
+
+<div class="row g-3 mb-4">
+    <div class="col">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <div class="small text-muted">Valor del inventario</div>
+                <div class="fs-3 fw-bold text-success">$@Model.ValorInventario.ToString("N2")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <div class="small text-muted">Unidades</div>
+                <div class="fs-3 fw-bold">@Model.UnidadesTotales.ToString("N0")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <div class="small text-muted">SKUs</div>
+                <div class="fs-3 fw-bold">@Model.TotalSkus</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <div class="small text-muted">Con existencias</div>
+                <div class="fs-3 fw-bold text-primary">@Model.ConExistencias / @Model.TotalSkus</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <div class="small text-muted">Stock bajo</div>
+                <div class="fs-3 fw-bold text-warning">@Model.PorDebajoMinimo</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <div class="small text-muted">Sin existencias</div>
+                <div class="fs-3 fw-bold text-danger">@Model.SinExistencias</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+        <span>Estado de existencias</span>
+        <a class="btn btn-sm btn-outline-secondary" asp-action="Movimientos">
+            Ver movimientos
+        </a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Código</th>
+                    <th>Producto</th>
+                    <th class="text-center">Stock</th>
+                    <th class="text-center">Mínimo</th>
+                    <th class="text-end">Costo</th>
+                    <th class="text-end">Precio venta</th>
+                    <th class="text-end">Valor ($)</th>
+                    <th class="text-center">Estado</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in Model.Stock)
+                {
+                    <tr class="@(s.Estado == EstadoStock.Bajo ? "table-warning" : s.Estado == EstadoStock.SinExistencias ? "table-danger" : "")">
+                        <td>@s.CodigoBarras</td>
+                        <td class="fw-semibold">@s.Nombre</td>
+                        <td class="text-center fw-bold">@s.StockActual.ToString("N0")</td>
+                        <td class="text-center">@s.StockMinimo.ToString("N0")</td>
+                        <td class="text-end">$@s.Costo.ToString("N2")</td>
+                        <td class="text-end">$@s.PrecioVenta.ToString("N2")</td>
+                        <td class="text-end">$@s.Valor.ToString("N2")</td>
+                        <td class="text-center">
+                            @if (s.Estado == EstadoStock.Ok)
+                            {
+                                <span class="badge text-bg-success">En existencia</span>
+                            }
+                            else if (s.Estado == EstadoStock.Bajo)
+                            {
+                                <span class="badge text-bg-warning">Stock bajo</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-danger">Sin existencias</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary" asp-action="Historial" asp-route-productoId="@s.ProductoId">Historial</a>
+                            <a class="btn btn-sm btn-outline-secondary" asp-action="Registrar" asp-route-productoId="@s.ProductoId" asp-route-sucursalId="@Model.SucursalId">Entrada/salida</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

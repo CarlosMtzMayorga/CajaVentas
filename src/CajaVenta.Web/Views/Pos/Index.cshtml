@@ -1,0 +1,132 @@
+@{
+    Layout = "_Layout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Punto de Venta</h1>
+        <small class="text-muted">Escanea el código de barras o escribe el código y presiona Enter</small>
+    </div>
+    @if (Model.TurnoAbierto)
+    {
+        <span class="badge status-open"><i class="bi bi-circle-fill"></i> Turno abierto</span>
+    }
+    else
+    {
+        <span class="badge status-closed"><i class="bi bi-circle"></i> Sin turno abierto</span>
+        <a class="btn btn-sm btn-warning" asp-controller="Turnos" asp-action="Index">Abrir turno</a>
+    }
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Mensaje))
+{
+    <div class="alert alert-success alert-dismissible" role="alert">
+        @Model.Mensaje
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(Model.Error))
+{
+    <div class="alert alert-danger alert-dismissible" role="alert">
+        @Model.Error
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<form asp-action="Agregar" asp-controller="Pos" method="post" class="scan-form">
+    @Html.AntiForgeryToken()
+    <div class="input-group input-group-lg">
+        <input type="text" id="scannerInput" name="codigo" class="form-control form-control-lg"
+               placeholder="Código de barras o código 7501020515001 x6"
+               autocomplete="off" autofocus />
+        <button class="btn btn-primary btn-lg" type="submit">Agregar</button>
+    </div>
+    <small class="form-text text-muted">Soporta cantidad: <code>7501020515001 x6</code> o <code>7501020515001*3</code></small>
+</form>
+
+<div class="row g-3 mt-2">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">Carrito (@Model.CantidadArticulos artículos)</span>
+                <form asp-action="Vaciar" method="post" class="d-inline" onsubmit="return confirm('¿Vaciar el carrito?');">
+                    @Html.AntiForgeryToken()
+                    <button class="btn btn-sm btn-outline-danger">Vaciar</button>
+                </form>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Producto</th>
+                            <th class="text-center" style="width:90px">Cant.</th>
+                            <th class="text-end">Precio</th>
+                            <th class="text-ends">Importe</th>
+                            <th class="text-end" style="width:60px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Carrito.Count == 0)
+                        {
+                            <tr><td colspan="5" class="text-center text-muted py-4">El carrito está vacío</td></tr>
+                        }
+                        @foreach (var item in Model.Carrito)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">@item.Nombre</div>
+                                    <small class="text-muted">@item.CodigoBarras</small>
+                                </td>
+                                <td class="text-center">@item.Cantidad.ToString("N0")</td>
+                                <td class="text-end">$@item.PrecioUnitario.ToString("N2")</td>
+                                <td class="text-end">$@item.TotalLinea.ToString("N2")</td>
+                                <td class="text-end">
+                                    <form asp-action="Quitar" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                        <button class="btn btn-sm btn-outline-danger" title="Quitar del carrito">Quitar</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="text-muted">Subtotal</span>
+                    <span>$@Model.Subtotal.ToString("N2")</span>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="text-muted">Impuestos</span>
+                    <span>$@Model.Impuestos.ToString("N2")</span>
+                </div>
+                <hr />
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fw-bold">Total</span>
+                    <span class="total-amount">$@Model.Total.ToString("N2")</span>
+                </div>
+
+                <form asp-action="IrACobro" method="post">
+                    @Html.AntiForgeryToken()
+                    <button class="btn btn-success btn-lg w-100" type="submit" disabled="@(Model.Carrito.Count == 0 || !Model.TurnoAbierto)">
+                        Cobrar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var input = document.getElementById('scannerInput');
+        if (input) input.focus();
+    });
+</script>

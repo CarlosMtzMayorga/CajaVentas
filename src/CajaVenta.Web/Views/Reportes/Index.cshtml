@@ -1,0 +1,206 @@
+@model ReportesModel
+@{ Layout = "_Layout"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Reportes</h1>
+        <small class="text-muted">Sucursal: <strong>@Model.SucursalNombre</strong> — ventas y stock</small>
+    </div>
+</div>
+
+<form method="get" class="row g-2 mb-4">
+    <div class="col-auto">
+        <label class="form-label mb-0 small">Sucursal</label>
+        <select name="sucursalId" class="form-select">
+            <option value="">Todas</option>
+            @foreach (var s in Model.Sucursales)
+            {
+                <option value="@s.Id" selected="@(Model.SucursalId == s.Id)">@s.Nombre</option>
+            }
+        </select>
+    </div>
+    <div class="col-auto">
+        <label class="form-label mb-0 small">Desde</label>
+        <input type="date" name="desde" class="form-control" value="@Model.Desde.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-auto">
+        <label class="form-label mb-0 small">Hasta</label>
+        <input type="date" name="hasta" class="form-control" value="@Model.Hasta.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-auto d-flex align-items-end">
+        <button class="btn btn-outline-primary" type="submit">Filtrar</button>
+    </div>
+</form>
+
+<div class="row g-3 mb-4">
+    <div class="col">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <div class="small text-muted">Ventas</div>
+                <div class="fs-3 fw-bold text-success">$@Model.TotalVentas.ToString("N2")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <div class="small text-muted">Tickets</div>
+                <div class="fs-3 fw-bold">@Model.CantidadTickets</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <div class="small text-muted">Ticket promedio</div>
+                <div class="fs-3 fw-bold">$@Model.PromedioTicket.ToString("N2")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <div class="small text-muted">Impuestos</div>
+                <div class="fs-3 fw-bold">$@Model.TotalImpuestos.ToString("N2")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <div class="small text-muted">Cancelados</div>
+                <div class="fs-3 fw-bold text-danger">@Model.TicketsCancelados</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-semibold">Productos más vendidos</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead class="table-light">
+                        <tr><th>Producto</th><th class="text-center">Unidades</th><th class="text-end">Importe</th></tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.TopProductos.Count == 0)
+                        {
+                            <tr><td colspan="3" class="text-center text-muted py-3">Sin ventas en el período</td></tr>
+                        }
+                        @foreach (var item in Model.TopProductos)
+                        {
+                            <tr>
+                                <td>@item.Producto</td>
+                                <td class="text-center">@item.Cantidad.ToString("N0")</td>
+                                <td class="text-end">$@item.Importe.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-semibold">Ventas por método de pago</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead class="table-light">
+                        <tr><th>Método</th><th class="text-center">Tickets</th><th class="text-end">Importe</th></tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.PorMetodo.Count == 0)
+                        {
+                            <tr><td colspan="3" class="text-center text-muted py-3">Sin datos</td></tr>
+                        }
+                        @foreach (var m in Model.PorMetodo)
+                        {
+                            <tr>
+                                <td>@m.Metodo.ToString()</td>
+                                <td class="text-center">@m.Tickets</td>
+                                <td class="text-end">$@m.Importe.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white fw-semibold">Stock bajo</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead class="table-light">
+                        <tr><th>Producto</th><th class="text-end">Stock</th><th class="text-end">Mínimo</th></tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.StockBajo.Count == 0)
+                        {
+                            <tr><td colspan="3" class="text-center text-muted py-3">Ningún producto por debajo del mínimo</td></tr>
+                        }
+                        @foreach (var p in Model.StockBajo)
+                        {
+                            <tr class="table-warning">
+                                <td>@p.Nombre</td>
+                                <td class="text-end fw-bold text-danger">@p.StockActual.ToString("N0")</td>
+                                <td class="text-end">@p.StockMinimo.ToString("N0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white fw-semibold">Ventas del período</div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Ticket</th>
+                    <th>Fecha</th>
+                    <th>Método</th>
+                    <th class="text-end">Subtotal</th>
+                    <th class="text-end">Impuestos</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-center">Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Ventas.Count == 0)
+                {
+                    <tr><td colspan="7" class="text-center text-muted py-4">Sin ventas en el período</td></tr>
+                }
+                @foreach (var v in Model.Ventas)
+                {
+                    <tr>
+                        <td>@v.NumeroTicket</td>
+                        <td>@v.FechaCreacion.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@v.MetodoPago.ToString()</td>
+                        <td class="text-end">$@v.Subtotal.ToString("N2")</td>
+                        <td class="text-end">$@v.Impuestos.ToString("N2")</td>
+                        <td class="text-end fw-semibold">$@v.Total.ToString("N2")</td>
+                        <td class="text-center">
+                            @if (v.Estado == EstadoVenta.Completada)
+                            {
+                                <span class="badge text-bg-success">Completada</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-danger">Cancelada</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,27 @@
+# Build / output
+bin/
+obj/
+*.user
+.vs/
+
+# SQLite (database)
+*.db
+*.db-shm
+*.db-wal
+
+# Constancias generadas por la app
+src/CajaVenta.Web/App_Data/Constancias/*
+
+# Environment
+appsettings.Development.json
+
+# Logs
+*.log
+logs/
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/

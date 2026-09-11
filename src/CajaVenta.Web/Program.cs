@@ -5,9 +5,14 @@ using CajaVenta.Infrastructure.Seed;
 using CajaVenta.Web.Middleware;
 using CajaVenta.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<CajaVentaDbContext>();
 
 var connectionString = builder.Configuration.GetConnectionString("CajaVenta");
 if (string.IsNullOrWhiteSpace(connectionString))
@@ -66,15 +71,19 @@ app.UseAuthorization();
 app.UseMiddleware<LicenciaMiddleware>();
 
 using (var scope = app.Services.CreateScope())
-    {
-        var context = scope.ServiceProvider.GetRequiredService<CajaVentaDbContext>();
-        context.Database.EnsureCreated();
-        EsquemaMigracion.Aplicar(context);
-        SeedData.Inicializar(context, scope.ServiceProvider);
-    }
+{
+    var context = scope.ServiceProvider.GetRequiredService<CajaVentaDbContext>();
+    context.Database.EnsureCreated();
+    EsquemaMigracion.Aplicar(context);
+    SeedData.Inicializar(context, scope.ServiceProvider);
+}
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+app.MapHealthChecks("/health");
+
 app.Run();
+
+public partial class Program { }

@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # CajaVenta POS Web Application
+  cajaventa-web:
+    build:
+      context: .
+      dockerfile: src/CajaVenta.Web/Dockerfile
+    container_name: cajaventa-web
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__CajaVenta=Data Source=/app/data/CajaVenta.db
+      - Licencia__PortalUrl=http://cajaventa-portal:8080
+      - Licencia__Identificador=mi-negocio
+    volumes:
+      - cajaventa-data:/app/data
+    restart: unless-stopped
+    depends_on:
+      cajaventa-portal:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # CajaVenta SaaS Portal
+  cajaventa-portal:
+    build:
+      context: .
+      dockerfile: src/CajaVenta.Portal/Dockerfile
+    container_name: cajaventa-portal
+    ports:
+      - "5001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__Portal=Data Source=/app/data/portal.db
+      - Pasarela__Proveedor=Demo
+    volumes:
+      - cajaventa-portal-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  cajaventa-data:
+    driver: local
+  cajaventa-portal-data:
+    driver: local
+
+networks:
+  default:
+    name: cajaventa-network

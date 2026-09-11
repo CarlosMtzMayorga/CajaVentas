@@ -1,0 +1,51 @@
+# Build outputs
+**/bin/
+**/obj/
+
+# IDE
+.vs/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Test results
+**/TestResults/
+**/*.trx
+
+# Docker
+.dockerignore
+Dockerfile*
+docker-compose*.yml
+
+# Git
+.git/
+.gitignore
+
+# NuGet
+packages/
+*.nupkg
+
+# Certificates
+*.pfx
+*.p12
+
+# Secrets
+*.json
+!appsettings.json
+!appsettings.Development.json
+!appsettings.Production.json
+
+# Publish
+publish/

@@ -2,9 +2,14 @@ using CajaVenta.Portal.Data;
 using CajaVenta.Portal.Services;
 using CajaVenta.Portal.Services.Pasarelas;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<PortalDbContext>();
 
 var rutaDatos = Path.Combine(builder.Environment.ContentRootPath, "data");
 Directory.CreateDirectory(rutaDatos);
@@ -82,5 +87,7 @@ app.MapControllerRoute(
 app.MapControllerRoute(
     name: "api",
     pattern: "api/{controller=Licencia}/{action=Index}/{id?}");
+
+app.MapHealthChecks("/health");
 
 app.Run();

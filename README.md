@@ -38,6 +38,10 @@ Repositorio: [https://github.com/CarlosMtzMayorga/CajaVentas.git](https://github
 - **Reportes**: ventas por rango de fechas, sucursal y caja; historial de Cortes Z; stock bajo por sucursal.
 - **Validación de Licencias / SaaS**: integración con el portal SaaS para validación automática del estado de suscripción y bloqueo de acceso cuando la licencia esté suspendida/vencida.
 - **SQLite**: base de datos ligera, sin servidor (archivo `src/CajaVenta.db` para standalone o aprovisionada por cliente en modo SaaS).
+- **Pruebas automatizadas**: 15 tests unitarios e integración (xUnit, Moq, FluentAssertions, AutoFixture).
+- **Docker & Docker Compose**: imágenes multi-stage para POS y Portal, health checks, volúmenes persistentes.
+- **CI/CD**: GitHub Actions pipeline (build, test, docker, deploy staging/production).
+- **Health Checks**: endpoint `/health` con verificación de base de datos.
 
 ---
 
@@ -65,6 +69,10 @@ La `Infrastructure` referencia la `Application`, y la `Web` referencia a ambas. 
 | Frontend | Razor Views + Bootstrap 5 (CDN) + Bootstrap Icons |
 | Autenticación | Cookies + Claims con roles (`Admin`, `Cajero`) |
 | Pasarelas de pago | Abstracción `IPasarelaPago`: Stripe, MercadoPago y modo Demo |
+| Testing | xUnit, Moq, FluentAssertions, AutoFixture |
+| Contenedores | Docker, Docker Compose |
+| CI/CD | GitHub Actions |
+| Health Checks | ASP.NET Core Health Checks + EF Core |
 
 ---
 
@@ -126,6 +134,63 @@ dotnet run --project src/CajaVenta.Portal --no-launch-profile --urls http://loca
 ```
 
 `http://localhost:5001` → login del portal. La base del portal es `src/CajaVenta.Portal/data/portal.db`; las de los clientes quedan en `src/CajaVenta.Portal/data/clientes/`.
+
+---
+
+## Docker (Producción)
+
+### Imágenes disponibles
+
+```bash
+# POS (Punto de Venta)
+docker pull ghcr.io/carlosmtzmayorga/cajaventa-web:latest
+
+# Portal SaaS
+docker pull ghcr.io/carlosmtzmayorga/cajaventa-portal:latest
+```
+
+### Docker Compose (Recomendado)
+
+```bash
+# Clonar y levantar ambos servicios
+git clone https://github.com/CarlosMtzMayorga/CajaVentas.git
+cd CajaVentas
+docker compose up -d
+```
+
+**Servicios levantados:**
+| Servicio | Puerto | Descripción |
+|---|---|---|
+| `cajaventa-web` | 5000 | POS - Punto de Venta |
+| `cajaventa-portal` | 5001 | Portal SaaS - Gestión suscripciones |
+
+**Volúmenes persistentes:**
+- `cajaventa-data` → `/app/data` (POS: `CajaVenta.db`)
+- `cajaventa-portal-data` → `/app/data` (Portal: `portal.db` + clientes)
+
+### Variables de entorno (Production)
+
+**POS (`src/CajaVenta.Web/appsettings.Production.json`):**
+```json
+{
+  "ConnectionStrings": { "CajaVenta": "Data Source=/app/data/CajaVenta.db" },
+  "Licencia": { "PortalUrl": "http://cajaventa-portal:8080", "Identificador": "mi-negocio" }
+}
+```
+
+**Portal (`src/CajaVenta.Portal/appsettings.Production.json`):**
+```json
+{
+  "ConnectionStrings": { "Portal": "Data Source=/app/data/portal.db" },
+  "Pasarela": { "Proveedor": "Demo" }
+}
+```
+
+### Health Checks
+
+Ambos servicios exponen `GET /health` para orquestadores (K8s, Docker Swarm, etc.):
+- Verifica conectividad a base de datos SQLite
+- Retorna 200 OK si saludable, 503 si no
 
 ---
 
@@ -341,7 +406,24 @@ src/
 - **Regenerar la app en caliente**: `dotnet run watch --project src/CajaVenta.Web`.
 - **Restablecer la DB**: `./reset-db.sh` y volver a arrancar.
 - **Build**: `dotnet build CajaVenta.sln` (debe quedar en 0 errores).
-- **Pruebas manuales (E2E)**:
+
+### Tests
+
+```bash
+# Ejecutar todos los tests
+dotnet test CajaVenta.sln
+
+# Con coverage
+dotnet test CajaVenta.sln --collect:"XPlat Code Coverage"
+
+# Solo tests de una capa
+dotnet test tests/CajaVenta.Application.Tests
+dotnet test tests/CajaVenta.Infrastructure.Tests
+```
+
+**Cobertura actual:** 15 tests (6 Domain + 4 Application + 3 Infrastructure + 2 Web)
+
+### Pruebas manuales (E2E)
   - Login: `POST /Auth/Login` con `nombreUsuario` y `contrasena`
   - Crear sucursal: `POST /Sucursales/Crear` (`Nombre`)
   - Crear caja: `POST /Sucursales/CrearCaja` (`SucursalId`, `Nombre`)
